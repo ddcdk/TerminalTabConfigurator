@@ -1,73 +1,77 @@
 <p align="center">
-  <img src="src/TerminalTabConfigurator/Assets/app.png" width="96" alt="Icône TerminalTabConfigurator" />
+  <img src="src/TerminalTabConfigurator/Assets/app.png" width="96" alt="TerminalTabConfigurator icon" />
 </p>
 
 # TerminalTabConfigurator
 
-Petit utilitaire Windows (WPF, .NET 10) pour **dessiner graphiquement un onglet Windows Terminal divisé en volets**, puis l'ajouter à Windows Terminal. Chaque volet a sa propre commande, son profil, son dossier de démarrage et son titre.
+**English** · [Français](README.fr.md)
 
-Exemple : un onglet divisé verticalement, dont la moitié droite est elle-même divisée horizontalement, avec `pwsh.exe` lancé dans un dossier différent pour chaque volet. Une fois publiée, la disposition s'ouvre en un clic depuis la palette de commandes, le menu « Nouvel onglet », un raccourci clavier ou un raccourci sur le Bureau.
+A small Windows utility (WPF, .NET 10) to **graphically design a Windows Terminal tab split into panes**, then add it to Windows Terminal. Each pane has its own command, profile, starting directory and title.
 
-## Fonctionnalités
+Example: a tab split vertically, with its right half split horizontally, each pane running `pwsh.exe` in a different folder. Once published, the layout opens in one click from the command palette, the "New tab" menu, a keyboard shortcut or a desktop shortcut.
 
-- **Éditeur visuel** : division verticale ou horizontale d'un volet (barre d'outils, boutons du volet, clic droit), suppression, égalisation, redimensionnement à la souris (le pourcentage s'affiche sur chaque séparateur).
-- **Modèles de départ** : volet unique, 2 colonnes, 2 lignes, 1 + 2 à droite, 2 à gauche + 1, 1 en haut + 2 en bas, 3 colonnes, grille 2 × 2.
-- **Par volet** : titre, profil Windows Terminal, ligne de commande, dossier de démarrage, taille, volet qui a le focus à l'ouverture.
-- **Par onglet** : nom (affiché dans la palette et le menu), icône, titre de l'onglet, couleur de l'onglet.
-- **Publication dans `settings.json`**, avec un aperçu exact du JSON écrit, une sauvegarde horodatée et une détection des conflits de raccourcis clavier.
-- **Relecture et modification** des dispositions déjà publiées : elles sont relues depuis `settings.json` au démarrage.
-- **Tester** : ouvre la disposition tout de suite dans Windows Terminal, sans rien publier.
-- **Commande générée** : la ligne `wt.exe` équivalente, à copier dans un script.
-- Prise en charge de Windows Terminal, Windows Terminal Preview, Canary et de la version non empaquetée (choix de l'installation dans la barre d'outils).
+> The user interface is in French. Interface labels are quoted below with their English meaning.
 
-## Prérequis
+## Features
 
-- Windows 10 ou 11 avec une version récente de [Windows Terminal](https://aka.ms/terminal) (testé avec la 1.24).
-- [SDK .NET 10](https://dotnet.microsoft.com/download) pour compiler.
+- **Visual editor**: split a pane vertically or horizontally (toolbar, pane buttons, right-click), delete, equalize, resize with the mouse (the percentage is shown on each splitter).
+- **Starting templates**: single pane, 2 columns, 2 rows, 1 + 2 on the right, 2 on the left + 1, 1 on top + 2 below, 3 columns, 2 × 2 grid.
+- **Per pane**: title, Windows Terminal profile, command line, starting directory, size, which pane has focus when the tab opens.
+- **Per tab**: name (shown in the palette and the menu), icon, tab title, tab color.
+- **Publishing to `settings.json`**, with an exact preview of the JSON written, a timestamped backup, and detection of keyboard shortcut conflicts.
+- **Reading back and editing** layouts already published: they are loaded from `settings.json` at startup.
+- **Test** ("Tester"): opens the layout right away in Windows Terminal, without publishing anything.
+- **Generated command**: the equivalent `wt.exe` command line, ready to copy into a script.
+- Supports Windows Terminal, Windows Terminal Preview, Canary and the unpackaged version (installation picker in the toolbar).
 
-## Compiler et lancer
+## Requirements
+
+- Windows 10 or 11 with a recent version of [Windows Terminal](https://aka.ms/terminal) (tested with 1.24).
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) to build.
+
+## Build and run
 
 ```powershell
 dotnet build
 dotnet run --project src/TerminalTabConfigurator
 ```
 
-Tests unitaires de la bibliothèque `Core` (génération, relecture, titres, icônes, élévation) :
+Unit tests for the `Core` library (generation, reading back, titles, icons, elevation):
 
 ```powershell
 dotnet test
 ```
 
-## Utilisation
+## Usage
 
-1. **Nouvelle** : choisissez un modèle, un nom, un profil et un dossier par défaut.
-2. Cliquez un volet pour le sélectionner, divisez-le ou supprimez-le, et glissez les séparateurs pour ajuster les tailles.
-3. Renseignez les propriétés du volet sélectionné et de l'onglet dans le panneau de droite.
-4. **Tester** pour vérifier le rendu dans Windows Terminal.
-5. **Ajouter à Windows Terminal…** : choisissez où l'ajouter (palette, raccourci clavier, menu « Nouvel onglet », raccourci Bureau), vérifiez le JSON, puis publiez.
+1. **"Nouvelle"** (New): pick a template, a name, a profile and a default folder.
+2. Click a pane to select it, split or delete it, and drag the splitters to adjust sizes.
+3. Fill in the properties of the selected pane and of the tab in the right-hand panel.
+4. **"Tester"** (Test) to check the result in Windows Terminal.
+5. **"Ajouter à Windows Terminal…"** (Add to Windows Terminal): choose where to add it (palette, keyboard shortcut, "New tab" menu, desktop shortcut), review the JSON, then publish.
 
-Windows Terminal recharge `settings.json` tout seul : la disposition est disponible immédiatement. Pour la modifier plus tard, sélectionnez-la dans **Mes dispositions**, changez-la, puis publiez à nouveau (l'entrée existante est mise à jour). **Retirer / supprimer** l'enlève de `settings.json`.
+Windows Terminal reloads `settings.json` on its own, so the layout is available immediately. To change it later, select it under **"Mes dispositions"** (My layouts), edit it, then publish again: the existing entry is updated. **"Retirer / supprimer"** (Remove / delete) removes it from `settings.json`.
 
-### Titres
+### Titles
 
-- Le **titre d'un volet** (y compris le premier) est le titre de ce volet. Vide : le volet affiche le titre de son processus.
-- Le **titre de l'onglet** est indépendant des volets ; il est appliqué en dernier. Vide : l'onglet affiche le titre du volet actif, comme d'habitude dans Windows Terminal.
+- A **pane title** (including the first pane) is the title of that pane. Empty: the pane shows its process title.
+- The **tab title** is independent of the panes and is applied last. Empty: the tab shows the title of the active pane, as Windows Terminal normally does.
 
-### Icône
+### Icon
 
-L'icône s'affiche dans la palette de commandes et dans le menu « Nouvel onglet ». Elle peut être :
+The icon is shown in the command palette and in the "New tab" menu. It can be:
 
-- un **emoji** (suggestions proposées dans l'éditeur, ou saisie libre) ;
-- un **glyphe** de la police Segoe Fluent Icons ;
-- un **fichier image** (`.png`, `.ico`, `.jpg`…), choisi avec le bouton Parcourir ; les variables d'environnement sont acceptées (`%USERPROFILE%\icons\api.png`).
+- an **emoji** (suggestions offered in the editor, or type your own);
+- a **glyph** from the Segoe Fluent Icons font;
+- an **image file** (`.png`, `.ico`, `.jpg`…), picked with the Browse button; environment variables are allowed (`%USERPROFILE%\icons\api.png`).
 
-Un fichier `.ico` sert aussi d'icône au raccourci du Bureau. Sinon, le raccourci prend l'icône de Windows Terminal.
+An `.ico` file is also used as the desktop shortcut icon. Otherwise the shortcut uses the Windows Terminal icon.
 
-> Dans l'éditeur, les emoji sont affichés en monochrome (limite de WPF) ; Windows Terminal les affiche en couleur.
+> In the editor, emoji are rendered in monochrome (a WPF limitation); Windows Terminal shows them in color.
 
-## Ce qui est écrit dans `settings.json`
+## What is written to `settings.json`
 
-Chaque disposition est une **action** (identifiant `User.TTC.<nom>`) de type `multipleActions`, qui rejoue la construction de l'onglet : `newTab`, puis un `splitPane` par division (avec `focusPane` quand il faut revenir sur un volet précédent), puis `renameTab` pour le titre de l'onglet.
+Each layout is an **action** (id `User.TTC.<name>`) of type `multipleActions` that replays how the tab is built: `newTab`, then one `splitPane` per split (with `focusPane` when it must go back to an earlier pane), then `renameTab` for the tab title.
 
 ```jsonc
 "actions": [
@@ -90,44 +94,44 @@ Chaque disposition est une **action** (identifiant `User.TTC.<nom>`) de type `mu
 "newTabMenu": [ { "type": "action", "id": "User.TTC.DevWeb" }, { "type": "remainingProfiles" } ]
 ```
 
-- Le raccourci clavier et l'entrée du menu « Nouvel onglet » sont facultatifs. Ils référencent l'action par son identifiant ; le menu reprend son nom et son icône.
-- Avant chaque écriture, une copie `settings.json.ttc-backup-AAAAMMJJ-HHMMSS` est faite à côté du fichier (option cochée par défaut).
-- Le raccourci du Bureau lance `wt.exe -w 0 nt … ; sp … ; fp …` (dernière fenêtre Windows Terminal utilisée).
+- The keyboard shortcut and the "New tab" menu entry are optional. They refer to the action by its id; the menu reuses its name and icon.
+- Before each write, a copy named `settings.json.ttc-backup-YYYYMMDD-HHMMSS` is made next to the file (option checked by default).
+- The desktop shortcut runs `wt.exe -w 0 nt … ; sp … ; fp …` (in the most recently used Windows Terminal window).
 
-## Profils administrateur
+## Administrator profiles
 
-Windows Terminal ne peut pas ouvrir un volet administrateur (`"elevate": true`) dans une fenêtre normale : il ouvre une autre fenêtre avec un seul volet, et la division est perdue. L'outil en tient compte :
+Windows Terminal cannot open an administrator pane (`"elevate": true`) inside a normal window: it opens another window with a single pane, and the split is lost. The tool handles this:
 
-- **tous les volets sont administrateur** : *Tester* demande l'élévation, et le raccourci du Bureau est marqué « Exécuter en tant qu'administrateur ». Le menu, la palette et le raccourci clavier ne fonctionnent que dans une fenêtre Windows Terminal déjà lancée en administrateur ;
-- **mélange de volets normaux et administrateur** : impossible dans un même onglet ; la publication et le test sont bloqués, avec un message explicatif.
+- **all panes are administrator**: Test asks for elevation, and the desktop shortcut is marked "Run as administrator". The menu, the palette and the keyboard shortcut only work in a Windows Terminal window already running as administrator;
+- **a mix of normal and administrator panes**: not possible in a single tab; publishing and testing are blocked, with an explanation.
 
-Les profils administrateur sont signalés « (admin) » dans la liste des profils.
+Administrator profiles are flagged "(admin)" in the profile list.
 
-## Limites connues
+## Known limitations
 
-- Les **commentaires** de `settings.json` ne sont pas conservés à l'écriture (d'où la sauvegarde automatique).
-- Les dispositions non publiées ne sont pas enregistrées : fermez l'outil après avoir publié, ou confirmez la perte des modifications.
-- La ligne de commande `wt.exe` n'a pas d'équivalent à `renameTab` : dans la commande générée et le raccourci du Bureau, les volets sans titre prennent le titre de l'onglet.
-- Les dispositions publiées avec une version antérieure de l'outil (sans `renameTab`) sont relues correctement ; republiez-les pour passer au nouveau format des titres.
-- Une action modifiée à la main avec des étapes non prises en charge (par exemple `moveFocus`) est listée avec un message d'erreur et n'est pas éditable.
+- **Comments** in `settings.json` are not kept when it is written (hence the automatic backup).
+- Unpublished layouts are not saved: publish before closing the tool, or confirm that changes will be lost.
+- The `wt.exe` command line has no equivalent of `renameTab`: in the generated command and the desktop shortcut, untitled panes take the tab title.
+- Layouts published by an earlier version of the tool (without `renameTab`) are read back correctly; publish them again to switch to the new title format.
+- An action edited by hand with unsupported steps (for example `moveFocus`) is listed with an error message and cannot be edited.
 
-## Structure du projet
+## Project structure
 
 ```
 TerminalTabConfigurator.slnx
 src/
-  TerminalTabConfigurator.Core/        Bibliothèque sans dépendance à WPF
-    Model/        Arbre de disposition : TabLayout, SplitNode, PaneLeaf
-    Templates/    Modèles de départ
-    Generation/   Étapes newTab / splitPane / focusPane, JSON des actions, ligne de commande wt.exe
-    Parsing/      Relecture d'une action multipleActions en arbre de volets
-    Settings/     Lecture/écriture de settings.json, installations détectées, analyse de l'élévation
-  TerminalTabConfigurator/             Application WPF (thème Fluent sombre, MVVM)
-    Controls/     LayoutCanvas : aperçu interactif des volets
-    Dialogs/      Nouvelle disposition, Ajouter à Windows Terminal
+  TerminalTabConfigurator.Core/        Library with no WPF dependency
+    Model/        Layout tree: TabLayout, SplitNode, PaneLeaf
+    Templates/    Starting templates
+    Generation/   newTab / splitPane / focusPane steps, action JSON, wt.exe command line
+    Parsing/      Reads a multipleActions action back into a pane tree
+    Settings/     settings.json read/write, detected installations, elevation analysis
+  TerminalTabConfigurator/             WPF application (dark Fluent theme, MVVM)
+    Controls/     LayoutCanvas: interactive pane preview
+    Dialogs/      New layout, Add to Windows Terminal
     ViewModels/   MainViewModel, LayoutEntry
-    Services/     Création des raccourcis du Bureau
-    Assets/       Icône de l'application
+    Services/     Desktop shortcut creation
+    Assets/       Application icon
 tests/
-  TerminalTabConfigurator.Core.Tests/  Tests xUnit
+  TerminalTabConfigurator.Core.Tests/  xUnit tests
 ```
