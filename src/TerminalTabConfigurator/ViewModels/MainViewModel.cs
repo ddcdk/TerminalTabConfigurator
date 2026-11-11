@@ -5,6 +5,7 @@ using System.Windows.Input;
 using TerminalTabConfigurator.Core.Generation;
 using TerminalTabConfigurator.Core.Model;
 using TerminalTabConfigurator.Core.Settings;
+using TerminalTabConfigurator.Localization;
 using TerminalTabConfigurator.Mvvm;
 using TerminalTabConfigurator.Services;
 
@@ -20,6 +21,7 @@ public sealed class MainViewModel : ObservableObject
     private string _commandPreview = string.Empty;
     private string _statusMessage = string.Empty;
     private string? _defaultProfile;
+    private Func<string>? _status;
 
     public MainViewModel(IUserInteraction ui)
     {
@@ -42,8 +44,9 @@ public sealed class MainViewModel : ObservableObject
 
         foreach (var installation in TerminalInstallation.Detect()) Installations.Add(installation);
         SelectedInstallation = Installations.FirstOrDefault();
-        if (_installation is null)
-            StatusMessage = "Aucun settings.json de Windows Terminal trouvé. Lancez Windows Terminal une fois puis rechargez.";
+        if (_installation is null) SetStatus(() => Loc.T("NoSettingsFound"));
+
+        Loc.LanguageChanged += (_, _) => RefreshTexts();
     }
 
     public ObservableCollection<TerminalInstallation> Installations { get; } = [];
@@ -131,19 +134,21 @@ public sealed class MainViewModel : ObservableObject
     /// <summary>Why the layout will not open as drawn from a normal Windows Terminal window, or null.</summary>
     public string? ElevationWarning => SelectedElevation switch
     {
-        LayoutElevation.All =>
-            "Profil administrateur : Windows Terminal ne peut pas ouvrir ces volets dans une fenêtre normale. "
-            + "Depuis le menu, la palette ou un raccourci clavier, la disposition ne fonctionnera que dans une fenêtre lancée en administrateur. "
-            + "« Tester » et le raccourci Bureau la lancent en administrateur.",
-        LayoutElevation.Mixed =>
-            "Volets administrateur et volets normaux mélangés : impossible dans un même onglet. "
-            + "Utilisez des profils tous administrateur ou tous normaux.",
+        LayoutElevation.All => Loc.T("ElevationAll"),
+        LayoutElevation.Mixed => Loc.T("ElevationMixed"),
         _ => null,
     };
 
     public string CommandPreview { get => _commandPreview; private set => Set(ref _commandPreview, value); }
 
-    public string StatusMessage { get => _statusMessage; set => Set(ref _statusMessage, value); }
+    public string StatusMessage { get => _statusMessage; private set => Set(ref _statusMessage, value); }
+
+    /// <summary>Shows a status message; it is rebuilt when the language changes.</summary>
+    public void SetStatus(Func<string> message)
+    {
+        _status = message;
+        StatusMessage = message();
+    }
 
     public bool HasUnsavedChanges => Layouts.Any(e => e.IsDirty);
 
@@ -163,8 +168,15 @@ public sealed class MainViewModel : ObservableObject
     public ICommand BrowseIconCommand { get; }
 
     public bool ConfirmDiscard() =>
-        _ui.Confirm("Modifications non publiées",
-            "Certaines dispositions ont des modifications qui ne sont pas encore dans Windows Terminal. Les abandonner ?");
+        _ui.Confirm(Loc.T("UnsavedTitle"), Loc.T("UnsavedMessage"));
+
+    private void RefreshTexts()
+    {
+        foreach (var entry in Layouts) entry.RefreshTexts();
+        foreach (var profile in Profiles) profile.RefreshDisplay();
+        Raise(nameof(ElevationWarning));
+        if (_status is not null) StatusMessage = _status();
+    }
 
     // ---------- Loading ----------
 
@@ -186,18 +198,14 @@ public sealed class MainViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
         {
-            _ui.ShowError("Lecture impossible", $"Impossible de lire {_installation.SettingsPath} :\n{ex.Message}");
+            _ui.ShowError(Loc.T("ReadErrorTitle"), Loc.F("ReadErrorMessage", _installation.SettingsPath, ex.Message));
             return;
         }
 
         var profiles = doc.GetProfiles();
         ProfileCatalog.Profiles = profiles;
-        Profiles.Add(new ProfileOption("Profil par défaut", string.Empty));
-        foreach (var p in profiles)
-        {
-            var label = ProfileCatalog.Label(p) + (p.Hidden ? " (masqué)" : string.Empty);
-            Profiles.Add(new ProfileOption(label, p.Reference));
-        }
+        Profiles.Add(new ProfileOption(null, string.Empty));
+        foreach (var p in profiles) Profiles.Add(new ProfileOption(ProfileCatalog.Label(p), p.Reference, p.Hidden));
 
         _defaultProfile = doc.DefaultProfile;
 
@@ -214,9 +222,9 @@ public sealed class MainViewModel : ObservableObject
         }
 
         SelectedEntry = Layouts.FirstOrDefault(e => e.ActionId == previousId) ?? Layouts.FirstOrDefault();
-        StatusMessage = Layouts.Count == 0
-            ? "Aucune disposition publiée pour l'instant. Créez-en une avec « Nouvelle »."
-            : $"{Layouts.Count} disposition(s) lue(s) depuis {_installation.DisplayName}.";
+        var count = Layouts.Count;
+        var installation = _installation;
+        SetStatus(() => count == 0 ? Loc.T("NoLayoutsYet") : Loc.F("LayoutsRead", count, Loc.InstallationName(installation)));
     }
 
     private void WatchLayout(TabLayout? layout)
@@ -253,7 +261,7 @@ public sealed class MainViewModel : ObservableObject
         var entry = new LayoutEntry(layout, request.Name) { IsDirty = true };
         Layouts.Add(entry);
         SelectedEntry = entry;
-        StatusMessage = "Nouvelle disposition créée. Configurez chaque volet puis publiez-la.";
+        SetStatus(() => Loc.T("LayoutCreated"));
     }
 
     private void Split(SplitOrientation orientation)
@@ -291,7 +299,7 @@ public sealed class MainViewModel : ObservableObject
         var elevation = SelectedElevation;
         if (elevation == LayoutElevation.Mixed)
         {
-            _ui.ShowError("Test impossible", ElevationWarning!);
+            _ui.ShowError(Loc.T("TestFailedTitle"), ElevationWarning!);
             return;
         }
 
@@ -304,17 +312,16 @@ public sealed class MainViewModel : ObservableObject
                 UseShellExecute = true,
                 Verb = elevation == LayoutElevation.All ? "runas" : string.Empty,
             });
-            StatusMessage = elevation == LayoutElevation.All
-                ? "Disposition ouverte dans une nouvelle fenêtre Windows Terminal administrateur (test, rien n'est enregistré)."
-                : "Disposition ouverte dans une nouvelle fenêtre Windows Terminal (test, rien n'est enregistré).";
+            var key = elevation == LayoutElevation.All ? "TestOpenedElevated" : "TestOpened";
+            SetStatus(() => Loc.T(key));
         }
         catch (System.ComponentModel.Win32Exception ex) when (ex.NativeErrorCode == 1223) // ERROR_CANCELLED
         {
-            StatusMessage = "Test annulé : l'élévation administrateur a été refusée.";
+            SetStatus(() => Loc.T("TestCancelled"));
         }
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
         {
-            _ui.ShowError("Test impossible", $"Impossible de lancer wt.exe :\n{ex.Message}");
+            _ui.ShowError(Loc.T("TestFailedTitle"), Loc.F("CannotLaunchWt", ex.Message));
         }
     }
 
@@ -323,14 +330,14 @@ public sealed class MainViewModel : ObservableObject
         if (SelectedEntry is not { Layout: { } layout } entry || _installation is null) return;
         if (string.IsNullOrWhiteSpace(layout.Name))
         {
-            _ui.ShowError("Nom manquant", "Donnez un nom à la disposition : il apparaît dans la palette de commandes et le menu.");
+            _ui.ShowError(Loc.T("MissingNameTitle"), Loc.T("MissingNameMessage"));
             return;
         }
 
         var elevation = SelectedElevation;
         if (elevation == LayoutElevation.Mixed)
         {
-            _ui.ShowError("Publication impossible", ElevationWarning!);
+            _ui.ShowError(Loc.T("PublishFailedTitle"), ElevationWarning!);
             return;
         }
 
@@ -356,12 +363,15 @@ public sealed class MainViewModel : ObservableObject
             entry.HasShortcut = request.CreateShortcut;
             entry.RaiseActionId();
 
-            StatusMessage = $"« {layout.Name} » publiée dans {_installation.DisplayName}."
-                            + (backup is null ? string.Empty : $" Sauvegarde : {Path.GetFileName(backup)}");
+            var name = layout.Name;
+            var installation = _installation;
+            var backupName = backup is null ? null : Path.GetFileName(backup);
+            SetStatus(() => Loc.F("Published", name, Loc.InstallationName(installation))
+                            + (backupName is null ? string.Empty : Loc.F("BackupSuffix", backupName)));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException or InvalidOperationException)
         {
-            _ui.ShowError("Publication impossible", ex.Message);
+            _ui.ShowError(Loc.T("PublishFailedTitle"), ex.Message);
         }
     }
 
@@ -371,15 +381,14 @@ public sealed class MainViewModel : ObservableObject
 
         if (!entry.IsPublished)
         {
-            if (!_ui.Confirm("Supprimer le brouillon", $"Supprimer « {entry.Name} » ? Elle n'a jamais été publiée.")) return;
+            if (!_ui.Confirm(Loc.T("DeleteDraftTitle"), Loc.F("DeleteDraftMessage", entry.Name))) return;
             RemoveEntry(entry);
             return;
         }
 
         if (_installation is null || entry.ActionId is null) return;
-        var extra = entry.HasShortcut ? "\nLe raccourci du Bureau sera aussi supprimé." : string.Empty;
-        if (!_ui.Confirm("Retirer de Windows Terminal",
-                $"Retirer « {entry.Name} » de Windows Terminal (action, raccourci clavier, entrée de menu) ?{extra}\nUne sauvegarde de settings.json est faite avant.")) return;
+        var extra = entry.HasShortcut ? Loc.T("RemoveShortcutToo") : string.Empty;
+        if (!_ui.Confirm(Loc.T("RemoveTitle"), Loc.F("RemoveMessage", entry.Name, extra))) return;
 
         try
         {
@@ -389,11 +398,13 @@ public sealed class MainViewModel : ObservableObject
             if (entry.HasShortcut) ShortcutService.Delete(entry.PublishedName ?? entry.Name);
 
             RemoveEntry(entry);
-            StatusMessage = $"« {entry.Name} » retirée de Windows Terminal. Sauvegarde : {Path.GetFileName(backup)}";
+            var removedName = entry.Name;
+            var backupName = Path.GetFileName(backup);
+            SetStatus(() => Loc.F("Removed", removedName, backupName));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
         {
-            _ui.ShowError("Suppression impossible", ex.Message);
+            _ui.ShowError(Loc.T("RemoveFailedTitle"), ex.Message);
         }
     }
 

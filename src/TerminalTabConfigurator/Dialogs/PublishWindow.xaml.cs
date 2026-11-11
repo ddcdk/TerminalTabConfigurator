@@ -1,11 +1,10 @@
-using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Windows;
 using System.Windows.Controls;
 using TerminalTabConfigurator.Core.Generation;
 using TerminalTabConfigurator.Core.Model;
 using TerminalTabConfigurator.Core.Settings;
+using TerminalTabConfigurator.Localization;
 using TerminalTabConfigurator.Services;
 using TerminalTabConfigurator.ViewModels;
 
@@ -22,12 +21,12 @@ public partial class PublishWindow : Window
     {
         InitializeComponent();
 
-        _layout = entry.Layout ?? throw new ArgumentException("La disposition n'a pas pu être relue.", nameof(entry));
+        _layout = entry.Layout ?? throw new ArgumentException(Loc.T("LayoutUnreadable"), nameof(entry));
         _settings = currentSettings;
         _actionId = _layout.ActionId ?? currentSettings.GenerateActionId(_layout.Name);
 
-        HeaderText.Text = entry.IsPublished ? $"Mettre à jour « {_layout.Name} »" : $"Ajouter « {_layout.Name} » à Windows Terminal";
-        TargetName.Text = installation.DisplayName;
+        HeaderText.Text = Loc.F(entry.IsPublished ? "UpdateHeader" : "AddHeader", _layout.Name);
+        TargetName.Text = Loc.InstallationName(installation);
         TargetPath.Text = installation.SettingsPath;
 
         KeysCheck.IsChecked = entry.Keys is not null;
@@ -38,10 +37,8 @@ public partial class PublishWindow : Window
         ElevationBanner.Visibility = elevated ? Visibility.Visible : Visibility.Collapsed;
         var shortcutName = System.IO.Path.GetFileName(ShortcutService.GetPath(_layout.Name));
         ShortcutHint.Text = ShortcutService.FindWtExe() is null
-            ? "wt.exe introuvable : le raccourci ne peut pas être créé."
-            : elevated
-                ? $"Crée {shortcutName}, lancé en administrateur (Windows demandera confirmation)."
-                : $"Crée {shortcutName} qui ouvre la disposition dans la dernière fenêtre utilisée.";
+            ? Loc.T("WtNotFoundShortcut")
+            : Loc.F(elevated ? "ShortcutElevated" : "ShortcutNormal", shortcutName);
         if (ShortcutService.FindWtExe() is null)
         {
             ShortcutCheck.IsChecked = false;
@@ -67,9 +64,9 @@ public partial class PublishWindow : Window
         string? warning = null;
         if (KeysCheck.IsChecked == true)
         {
-            if (Keys is null) warning = "Saisissez une combinaison de touches, ou décochez l'option.";
+            if (Keys is null) warning = Loc.T("EnterKeys");
             else if (_settings.FindKeyConflict(Keys, _layout.ActionId) is { } other)
-                warning = $"Cette combinaison est déjà utilisée par « {other} ». Choisissez-en une autre.";
+                warning = Loc.F("KeysConflict", other);
         }
 
         KeysWarning.Text = warning;

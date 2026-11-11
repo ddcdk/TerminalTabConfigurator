@@ -22,7 +22,7 @@ public sealed record TerminalProfile(string Name, string? Guid, string? Commandl
 }
 
 /// <summary>A layout found in settings.json. <see cref="Layout"/> is null when it could not be read back (see <see cref="Error"/>).</summary>
-public sealed record PublishedLayout(string ActionId, string Name, TabLayout? Layout, string? Error, string? Keys, bool InNewTabMenu);
+public sealed record PublishedLayout(string ActionId, string Name, TabLayout? Layout, LayoutParseException? Error, string? Keys, bool InNewTabMenu);
 
 public sealed record PublishOptions(string? Keys, bool AddToNewTabMenu);
 
@@ -105,7 +105,7 @@ public sealed partial class TerminalSettingsDocument
 
             var name = Str(action, "name") ?? id[ActionIdPrefix.Length..];
             TabLayout? layout = null;
-            string? error = null;
+            LayoutParseException? error = null;
             try
             {
                 layout = LayoutParser.Parse(name, action["command"]);
@@ -114,7 +114,7 @@ public sealed partial class TerminalSettingsDocument
             }
             catch (Exception ex) when (ex is LayoutParseException or InvalidOperationException or FormatException)
             {
-                error = ex.Message;
+                error = ex as LayoutParseException ?? new LayoutParseException(LayoutParseError.Invalid, ex.Message);
             }
 
             result.Add(new PublishedLayout(id, name, layout, error, GetKeys(id), IsInNewTabMenu(id)));
@@ -248,7 +248,7 @@ public sealed partial class TerminalSettingsDocument
     /// <summary>Writes the file back. Returns the backup path when <paramref name="backup"/> is true.</summary>
     public string? Save(bool backup)
     {
-        if (FilePath is null) throw new InvalidOperationException("Ce document n'a pas de chemin de fichier.");
+        if (FilePath is null) throw new InvalidOperationException("This document has no file path.");
 
         string? backupPath = null;
         if (backup && File.Exists(FilePath))

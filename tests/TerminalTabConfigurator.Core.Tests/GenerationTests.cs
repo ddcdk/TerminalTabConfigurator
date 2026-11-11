@@ -53,7 +53,7 @@ public class GenerationTests
     [Fact]
     public void Grid_refocuses_first_half_before_splitting_it()
     {
-        var steps = LayoutStepBuilder.Build(LayoutTemplates.All.Single(t => t.Name == "Grille 2 × 2").Create("G", null, null));
+        var steps = LayoutStepBuilder.Build(LayoutTemplates.All.Single(t => t.Id == "grid-2x2").Create("G", null, null));
 
         Assert.Collection(steps,
             s => Assert.IsType<NewTabStep>(s),
@@ -63,13 +63,13 @@ public class GenerationTests
             s => Assert.Equal(SplitOrientation.Horizontal, Assert.IsType<SplitPaneStep>(s).Orientation));
     }
 
-    public static TheoryData<string> TemplateNames() => [.. LayoutTemplates.All.Select(t => t.Name)];
+    public static TheoryData<string> TemplateNames() => [.. LayoutTemplates.All.Select(t => t.Id)];
 
     [Theory]
     [MemberData(nameof(TemplateNames))]
     public void Every_template_round_trips_through_settings_json(string templateName)
     {
-        var layout = LayoutTemplates.All.Single(t => t.Name == templateName).Create("T", @"C:\Work", "{guid}");
+        var layout = LayoutTemplates.All.Single(t => t.Id == templateName).Create("T", @"C:\Work", "{guid}");
         var i = 0;
         foreach (var pane in layout.Leaves()) pane.Commandline = $"cmd{++i}.exe";
 
@@ -119,7 +119,8 @@ public class GenerationTests
             """);
 
         var ex = Assert.Throws<LayoutParseException>(() => LayoutParser.Parse("x", command));
-        Assert.Contains("moveFocus", ex.Message);
+        Assert.Equal(LayoutParseError.UnsupportedAction, ex.Error);
+        Assert.Equal("moveFocus", ex.Detail);
     }
 
     [Theory]

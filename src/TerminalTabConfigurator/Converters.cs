@@ -5,6 +5,7 @@ using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using TerminalTabConfigurator.Core.Settings;
+using TerminalTabConfigurator.Localization;
 
 namespace TerminalTabConfigurator;
 
@@ -15,7 +16,7 @@ public static class ProfileCatalog
 
     public static string Describe(string? reference)
     {
-        if (reference is null) return "Profil par défaut";
+        if (reference is null) return Loc.T("DefaultProfile");
         var profile = Profiles.FirstOrDefault(p => p.Matches(reference));
         return profile is null ? reference : Label(profile);
     }
@@ -48,13 +49,38 @@ public sealed class PaneBrushConverter : IValueConverter
     }
 }
 
-/// <summary>Profile reference (GUID or name) → profile name.</summary>
-public sealed class ProfileNameConverter : IValueConverter
+/// <summary>
+/// Profile reference (GUID or name) → profile name. Second value: <see cref="Loc.Language"/>, so "Default profile" follows the language.
+/// </summary>
+public sealed class ProfileNameConverter : IMultiValueConverter
 {
-    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
-        ProfileCatalog.Describe(value as string);
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) =>
+        ProfileCatalog.Describe(values[0] as string);
 
-    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>
+/// Text, or the translated text named by ConverterParameter when it is empty.
+/// Second value: <see cref="Loc.Language"/>, so the fallback follows the language.
+/// </summary>
+public sealed class FallbackTextConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) =>
+        values[0] is string { Length: > 0 } text ? text : Loc.T((string)parameter);
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
+
+/// <summary>Installation → its name in the current language. Second value: <see cref="Loc.Language"/>.</summary>
+public sealed class InstallationNameConverter : IMultiValueConverter
+{
+    public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture) =>
+        values[0] is TerminalInstallation installation ? Loc.InstallationName(installation) : string.Empty;
+
+    public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
 

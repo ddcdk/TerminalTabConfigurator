@@ -1,9 +1,12 @@
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
 using Microsoft.Win32;
 using TerminalTabConfigurator.Core.Settings;
 using TerminalTabConfigurator.Dialogs;
+using TerminalTabConfigurator.Localization;
+using TerminalTabConfigurator.Services;
 using TerminalTabConfigurator.ViewModels;
 
 namespace TerminalTabConfigurator;
@@ -25,6 +28,55 @@ public partial class MainWindow : Window, IUserInteraction
         base.OnClosing(e);
     }
 
+    // ---------- Preferences (language, theme) ----------
+
+    private void OnPreferences(object sender, RoutedEventArgs e)
+    {
+        var prefs = App.Preferences;
+        var menu = new ContextMenu
+        {
+            PlacementTarget = PreferencesButton,
+            Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom,
+        };
+
+        var language = new MenuItem { Header = Loc.T("Language") };
+        AddChoice(language, Loc.T("LanguageSystem"), prefs.Language == Preferences.System, () => SetLanguage(Preferences.System));
+        AddChoice(language, "Français", prefs.Language == Loc.French, () => SetLanguage(Loc.French));
+        AddChoice(language, "English", prefs.Language == Loc.English, () => SetLanguage(Loc.English));
+
+        var theme = new MenuItem { Header = Loc.T("Theme") };
+        AddChoice(theme, Loc.T("ThemeSystem"), prefs.Theme == Preferences.System, () => SetTheme(Preferences.System));
+        AddChoice(theme, Loc.T("ThemeDark"), prefs.Theme == ThemeService.Dark, () => SetTheme(ThemeService.Dark));
+        AddChoice(theme, Loc.T("ThemeLight"), prefs.Theme == ThemeService.Light, () => SetTheme(ThemeService.Light));
+
+        menu.Items.Add(language);
+        menu.Items.Add(theme);
+        menu.IsOpen = true;
+
+        static void AddChoice(MenuItem parent, string header, bool isChecked, Action apply)
+        {
+            var item = new MenuItem { Header = header, IsCheckable = true, IsChecked = isChecked };
+            item.Click += (_, _) => apply();
+            parent.Items.Add(item);
+        }
+    }
+
+    private static void SetLanguage(string preference)
+    {
+        App.Preferences.Language = preference;
+        App.Preferences.Save();
+        App.ApplyLanguage(preference);
+    }
+
+    private static void SetTheme(string preference)
+    {
+        App.Preferences.Theme = preference;
+        App.Preferences.Save();
+        ThemeService.Apply(preference);
+    }
+
+    // ---------- IUserInteraction ----------
+
     public bool Confirm(string title, string message) =>
         MessageBox.Show(this, message, title, MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No) == MessageBoxResult.Yes;
 
@@ -37,8 +89,8 @@ public partial class MainWindow : Window, IUserInteraction
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Icône de la disposition",
-            Filter = "Images (*.png;*.ico;*.jpg;*.jpeg;*.svg)|*.png;*.ico;*.jpg;*.jpeg;*.svg|Tous les fichiers|*.*",
+            Title = Loc.T("IconDialogTitle"),
+            Filter = $"{Loc.T("ImageFiles")} (*.png;*.ico;*.jpg;*.jpeg;*.svg)|*.png;*.ico;*.jpg;*.jpeg;*.svg|{Loc.T("AllFiles")}|*.*",
         };
         if (IconValue.LocalFile(current) is { } file) dialog.InitialDirectory = Path.GetDirectoryName(file);
         return dialog.ShowDialog(this) == true ? dialog.FileName : null;
@@ -61,11 +113,11 @@ public partial class MainWindow : Window, IUserInteraction
         try
         {
             Clipboard.SetText(text);
-            _viewModel.StatusMessage = "Commande copiée dans le presse-papiers.";
+            _viewModel.SetStatus(() => Loc.T("Copied"));
         }
         catch (System.Runtime.InteropServices.COMException)
         {
-            _viewModel.StatusMessage = "Le presse-papiers est occupé, réessayez.";
+            _viewModel.SetStatus(() => Loc.T("ClipboardBusy"));
         }
     }
 }
@@ -74,7 +126,7 @@ internal static class FolderPicker
 {
     public static string? Pick(Window owner, string? initialFolder)
     {
-        var dialog = new OpenFolderDialog { Title = "Dossier de démarrage" };
+        var dialog = new OpenFolderDialog { Title = Loc.T("StartingDirectory") };
         var initial = Environment.ExpandEnvironmentVariables(initialFolder ?? string.Empty);
         if (initial.Length > 0 && Directory.Exists(initial)) dialog.InitialDirectory = initial;
         return dialog.ShowDialog(owner) == true ? dialog.FolderName : null;

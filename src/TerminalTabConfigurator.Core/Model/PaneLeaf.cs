@@ -14,10 +14,7 @@ public sealed class PaneLeaf : LayoutNode
     private bool _isSelected;
 
     /// <summary>Pane title (sent as <c>tabTitle</c>).</summary>
-    public string? Title { get => _title; set { if (Set(ref _title, Normalize(value))) Raise(nameof(DisplayTitle)); } }
-
-    /// <summary>Label shown in the editor.</summary>
-    public string DisplayTitle => _title ?? $"Volet {_number}";
+    public string? Title { get => _title; set => Set(ref _title, Normalize(value)); }
 
     /// <summary>Windows Terminal profile, by GUID or name. Null = no profile (default profile + commandline).</summary>
     public string? Profile { get => _profile; set => Set(ref _profile, Normalize(value)); }
@@ -49,7 +46,6 @@ public sealed class PaneLeaf : LayoutNode
         {
             if (!Set(ref _number, value, affectsLayout: false)) return;
             Raise(nameof(IsPrimary));
-            Raise(nameof(DisplayTitle));
         }
     }
 

@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using TerminalTabConfigurator.Core.Model;
+using TerminalTabConfigurator.Localization;
 
 namespace TerminalTabConfigurator.Controls;
 
@@ -134,8 +135,8 @@ public sealed class LayoutCanvas : ContentControl
                 HorizontalAlignment = HorizontalAlignment.Stretch,
                 VerticalAlignment = VerticalAlignment.Stretch,
                 Tag = $"{split.Ratio * 100:0} / {(1 - split.Ratio) * 100:0}",
-                ToolTip = "Glisser pour redimensionner",
             };
+            splitter.SetBinding(ToolTipProperty, Loc.Bind("DragToResize"));
             splitter.SetResourceReference(StyleProperty, vertical ? "VerticalPaneSplitterStyle" : "HorizontalPaneSplitterStyle");
             splitter.DragCompleted += (_, _) => split.Ratio = ReadRatio(grid, vertical);
             Panel.SetZIndex(splitter, 1);

@@ -3,11 +3,17 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using TerminalTabConfigurator.Core.Model;
 using TerminalTabConfigurator.Core.Templates;
+using TerminalTabConfigurator.Localization;
 using TerminalTabConfigurator.ViewModels;
 
 namespace TerminalTabConfigurator.Dialogs;
 
-public sealed record TemplateOption(LayoutTemplate Template, TabLayout Preview);
+public sealed record TemplateOption(LayoutTemplate Template, TabLayout Preview)
+{
+    public string Name => Loc.TemplateName(Template.Id);
+
+    public string Description => Loc.TemplateDescription(Template.Id);
+}
 
 public partial class NewLayoutWindow : Window
 {
@@ -18,11 +24,11 @@ public partial class NewLayoutWindow : Window
         InitializeComponent();
 
         TemplateList.ItemsSource = LayoutTemplates.All
-            .Select(t => new TemplateOption(t, t.Create(t.Name, null, null)))
+            .Select(t => new TemplateOption(t, t.Create(Loc.TemplateName(t.Id), null, null)))
             .ToList();
 
         ProfileBox.ItemsSource = profiles;
-        // Start on the explicit default profile when it is listed, otherwise on "Profil par défaut".
+        // Start on the explicit default profile when it is listed, otherwise on "Default profile".
         ProfileBox.SelectedValue = profiles.Any(p => p.Reference == defaultProfile) ? defaultProfile : string.Empty;
         if (ProfileBox.SelectedIndex < 0) ProfileBox.SelectedIndex = 0;
 
@@ -37,7 +43,7 @@ public partial class NewLayoutWindow : Window
         // Keep following the template name until the user types their own.
         if (TemplateList.SelectedItem is TemplateOption option && (NameBox.Text.Length == 0 || NameBox.Text == _suggestedName))
         {
-            _suggestedName = option.Template.Name;
+            _suggestedName = option.Name;
             NameBox.Text = _suggestedName;
             NameBox.SelectAll();
         }
@@ -55,8 +61,8 @@ public partial class NewLayoutWindow : Window
     private bool Validate()
     {
         string? error = null;
-        if (TemplateList.SelectedItem is null) error = "Choisissez un modèle.";
-        else if (string.IsNullOrWhiteSpace(NameBox.Text)) error = "Donnez un nom à la disposition.";
+        if (TemplateList.SelectedItem is null) error = Loc.T("ChooseTemplate");
+        else if (string.IsNullOrWhiteSpace(NameBox.Text)) error = Loc.T("GiveName");
 
         ErrorText.Text = error;
         ErrorText.Visibility = error is null ? Visibility.Collapsed : Visibility.Visible;

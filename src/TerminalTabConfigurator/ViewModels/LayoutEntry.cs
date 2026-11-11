@@ -1,4 +1,6 @@
 using TerminalTabConfigurator.Core.Model;
+using TerminalTabConfigurator.Core.Parsing;
+using TerminalTabConfigurator.Localization;
 using TerminalTabConfigurator.Mvvm;
 
 namespace TerminalTabConfigurator.ViewModels;
@@ -14,12 +16,14 @@ public sealed class LayoutEntry : ObservableObject
     private bool _inNewTabMenu;
     private bool _hasShortcut;
 
-    public LayoutEntry(TabLayout? layout, string name, string? actionId = null, string? error = null)
+    private readonly LayoutParseException? _error;
+
+    public LayoutEntry(TabLayout? layout, string name, string? actionId = null, LayoutParseException? error = null)
     {
         Layout = layout;
         _fallbackName = name;
         _fallbackActionId = actionId;
-        Error = error;
+        _error = error;
         if (layout is not null)
         {
             layout.Changed += (_, _) =>
@@ -34,7 +38,8 @@ public sealed class LayoutEntry : ObservableObject
     /// <summary>Null when the action exists in settings.json but could not be read back.</summary>
     public TabLayout? Layout { get; }
 
-    public string? Error { get; }
+    /// <summary>Why the layout could not be read back, in the current language, or null.</summary>
+    public string? Error => _error is null ? null : Loc.ParseError(_error);
 
     public string Name => Layout?.Name is { Length: > 0 } n ? n : _fallbackName;
 
@@ -59,14 +64,21 @@ public sealed class LayoutEntry : ObservableObject
     {
         get
         {
-            if (Error is not null) return "illisible";
-            var panes = PaneCount > 1 ? $"{PaneCount} volets" : "1 volet";
-            var state = !IsPublished ? "non publié" : IsDirty ? "modifié" : "publié";
+            if (_error is not null) return Loc.T("StatusUnreadable");
+            var panes = PaneCount > 1 ? Loc.F("StatusPanes", PaneCount) : Loc.T("StatusOnePane");
+            var state = Loc.T(!IsPublished ? "StatusNotPublished" : IsDirty ? "StatusModified" : "StatusPublished");
             return $"{panes} · {state}";
         }
     }
 
     public void RaiseActionId() => Raise(nameof(ActionId));
+
+    /// <summary>Called after the language changed.</summary>
+    public void RefreshTexts()
+    {
+        Raise(nameof(Error));
+        RaiseStatus();
+    }
 
     private void RaiseStatus() => Raise(nameof(Status));
 }

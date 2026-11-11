@@ -1,9 +1,20 @@
 using TerminalTabConfigurator.Core.Settings;
 using TerminalTabConfigurator.Core.Templates;
+using TerminalTabConfigurator.Localization;
+using TerminalTabConfigurator.Mvvm;
 
 namespace TerminalTabConfigurator.ViewModels;
 
-public sealed record ProfileOption(string Display, string? Reference);
+/// <summary>A choice of the profile combo boxes. A null label stands for "Default profile".</summary>
+public sealed class ProfileOption(string? label, string reference, bool hidden = false) : ObservableObject
+{
+    public string Display =>
+        label is null ? Loc.T("DefaultProfile") : hidden ? $"{label} ({Loc.T("Hidden")})" : label;
+
+    public string Reference { get; } = reference;
+
+    public void RefreshDisplay() => Raise(nameof(Display));
+}
 
 public sealed record NewLayoutRequest(LayoutTemplate Template, string Name, string? Folder, string? Profile);
 

@@ -18,10 +18,10 @@ public static class LayoutParser
     public static TabLayout Parse(string name, JsonNode? command)
     {
         if (command is not JsonObject obj || Str(obj, "action") != "multipleActions" || obj["actions"] is not JsonArray actions)
-            throw new LayoutParseException("La commande n'est pas une action « multipleActions ».");
+            throw new LayoutParseException(LayoutParseError.NotMultipleActions);
 
         if (actions.Count == 0 || actions[0] is not JsonObject first || Str(first, "action") != "newTab")
-            throw new LayoutParseException("La première action doit être « newTab ».");
+            throw new LayoutParseException(LayoutParseError.FirstNotNewTab);
 
         var primary = ReadPane(first, NewTabKeys, Str(first, "tabTitle"));
         string? renamedTitle = null;
@@ -34,7 +34,7 @@ public static class LayoutParser
         for (var i = 1; i < actions.Count; i++)
         {
             if (actions[i] is not JsonObject action)
-                throw new LayoutParseException($"Action n°{i + 1} invalide.");
+                throw new LayoutParseException(LayoutParseError.InvalidAction, (i + 1).ToString(CultureInfo.InvariantCulture));
 
             switch (Str(action, "action"))
             {
@@ -60,7 +60,7 @@ public static class LayoutParser
                 case "focusPane":
                     var id = action["id"]?.GetValue<int>() ?? -1;
                     if (id < 0 || id >= panes.Count)
-                        throw new LayoutParseException($"focusPane vers un volet inexistant ({id}).");
+                        throw new LayoutParseException(LayoutParseError.FocusUnknownPane, id.ToString(CultureInfo.InvariantCulture));
                     focused = id;
                     lastWasFocus = true;
                     break;
@@ -72,7 +72,7 @@ public static class LayoutParser
                     break;
 
                 case var other:
-                    throw new LayoutParseException($"Action « {other} » non prise en charge par l'éditeur.");
+                    throw new LayoutParseException(LayoutParseError.UnsupportedAction, other);
             }
         }
 
@@ -130,11 +130,41 @@ public static class LayoutParser
         "left" => (SplitOrientation.Vertical, true),
         "down" or "horizontal" => (SplitOrientation.Horizontal, false),
         "up" => (SplitOrientation.Horizontal, true),
-        _ => throw new LayoutParseException($"Direction de division inconnue : « {split} »."),
+        _ => throw new LayoutParseException(LayoutParseError.UnknownSplitDirection, split),
     };
 
     private static string? Str(JsonObject obj, string key) =>
         obj[key] is JsonValue v && v.TryGetValue<string>(out var s) ? s : null;
 }
 
-public sealed class LayoutParseException(string message) : Exception(message);
+public enum LayoutParseError
+{
+    NotMultipleActions,
+    FirstNotNewTab,
+    InvalidAction,
+    FocusUnknownPane,
+    UnsupportedAction,
+    UnknownSplitDirection,
+
+    /// <summary>Any other reading error; <see cref="LayoutParseException.Detail"/> holds its message.</summary>
+    Invalid,
+}
+
+/// <summary>An action that the editor cannot turn back into a layout. The UI localizes it from <see cref="Error"/> and <see cref="Detail"/>.</summary>
+public sealed class LayoutParseException(LayoutParseError error, string? detail = null) : Exception(Describe(error, detail))
+{
+    public LayoutParseError Error { get; } = error;
+
+    public string? Detail { get; } = detail;
+
+    private static string Describe(LayoutParseError error, string? detail) => error switch
+    {
+        LayoutParseError.NotMultipleActions => "The command is not a \"multipleActions\" action.",
+        LayoutParseError.FirstNotNewTab => "The first action must be \"newTab\".",
+        LayoutParseError.InvalidAction => $"Action #{detail} is invalid.",
+        LayoutParseError.FocusUnknownPane => $"focusPane targets a pane that does not exist ({detail}).",
+        LayoutParseError.UnsupportedAction => $"Action \"{detail}\" is not supported by the editor.",
+        LayoutParseError.UnknownSplitDirection => $"Unknown split direction: \"{detail}\".",
+        _ => detail ?? "Invalid layout.",
+    };
+}

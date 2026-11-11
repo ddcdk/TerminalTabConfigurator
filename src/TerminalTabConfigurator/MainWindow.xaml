@@ -4,84 +4,110 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:controls="clr-namespace:TerminalTabConfigurator.Controls"
+        xmlns:l="clr-namespace:TerminalTabConfigurator.Localization"
         xmlns:model="clr-namespace:TerminalTabConfigurator.Core.Model;assembly=TerminalTabConfigurator.Core"
         mc:Ignorable="d"
-        Title="TerminalTabConfigurator" Icon="/Assets/app.ico"
+        Title="TerminalTabConfigurator" Icon="pack://application:,,,/TerminalTabConfigurator;component/Assets/app.ico"
         Width="1360" Height="860" MinWidth="1000" MinHeight="640"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource AppBackgroundBrush}">
+        Background="{DynamicResource AppBackgroundBrush}">
 
     <Window.Resources>
         <!-- One pane of the preview -->
         <DataTemplate x:Key="PaneTemplate" DataType="{x:Type model:PaneLeaf}">
-            <Border x:Name="Frame" Background="{StaticResource PaneBrush}" BorderBrush="{StaticResource PaneBorderBrush}"
+            <Border x:Name="Frame" Background="{DynamicResource PaneBrush}" BorderBrush="{DynamicResource PaneBorderBrush}"
                     BorderThickness="1" CornerRadius="6" ClipToBounds="True">
                 <DockPanel>
-                    <Border x:Name="Header" DockPanel.Dock="Top" Background="{StaticResource PaneHeaderBrush}"
-                            BorderBrush="#2A2A2A" BorderThickness="0,0,0,1" Padding="10,0" MinHeight="34">
+                    <Border x:Name="Header" DockPanel.Dock="Top" Background="{DynamicResource PaneHeaderBrush}"
+                            BorderBrush="{DynamicResource PaneHeaderLineBrush}" BorderThickness="0,0,0,1" Padding="10,0" MinHeight="34">
                         <DockPanel>
                             <StackPanel x:Name="Actions" DockPanel.Dock="Right" Orientation="Horizontal" Visibility="Collapsed" VerticalAlignment="Center">
-                                <Button Style="{StaticResource PaneActionButton}" ToolTip="Diviser ce volet verticalement"
-                                        AutomationProperties.Name="Diviser ce volet verticalement"
+                                <Button Style="{StaticResource PaneActionButton}" ToolTip="{l:Tr SplitPaneVertically}"
+                                        AutomationProperties.Name="{l:Tr SplitPaneVertically}"
                                         Command="{Binding DataContext.SplitVerticalCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                                     <Path Style="{StaticResource StrokeIcon}" Data="{StaticResource SplitVerticalIcon}" />
                                 </Button>
-                                <Button Style="{StaticResource PaneActionButton}" ToolTip="Diviser ce volet horizontalement"
-                                        AutomationProperties.Name="Diviser ce volet horizontalement"
+                                <Button Style="{StaticResource PaneActionButton}" ToolTip="{l:Tr SplitPaneHorizontally}"
+                                        AutomationProperties.Name="{l:Tr SplitPaneHorizontally}"
                                         Command="{Binding DataContext.SplitHorizontalCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                                     <Path Style="{StaticResource StrokeIcon}" Data="{StaticResource SplitHorizontalIcon}" />
                                 </Button>
-                                <Button Style="{StaticResource PaneActionButton}" ToolTip="Supprimer ce volet"
-                                        AutomationProperties.Name="Supprimer ce volet"
+                                <Button Style="{StaticResource PaneActionButton}" ToolTip="{l:Tr DeleteThisPane}"
+                                        AutomationProperties.Name="{l:Tr DeleteThisPane}"
                                         Command="{Binding DataContext.DeletePaneCommand, RelativeSource={RelativeSource AncestorType=Window}}">
                                     <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Text="&#xE74D;" />
                                 </Button>
                             </StackPanel>
                             <TextBlock DockPanel.Dock="Right" Margin="8,0" VerticalAlignment="Center" FontSize="11"
-                                       Foreground="#A8A8A8" TextTrimming="CharacterEllipsis"
-                                       Text="{Binding Profile, Converter={StaticResource ProfileName}}" />
+                                       Foreground="{DynamicResource HintBrush}" TextTrimming="CharacterEllipsis">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource ProfileName}">
+                                        <Binding Path="Profile" />
+                                        <Binding Source="{x:Static l:Loc.Instance}" Path="Language" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                             <Ellipse Width="8" Height="8" Margin="0,0,8,0" VerticalAlignment="Center"
                                      Fill="{Binding Number, Converter={StaticResource PaneColor}}" />
                             <TextBlock VerticalAlignment="Center" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
-                                <Run Text="{Binding Number, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding DisplayTitle, Mode=OneWay}" />
+                                <Run Text="{Binding Number, Mode=OneWay}" /><Run Text=" · " /><Run>
+                                    <Run.Text>
+                                        <MultiBinding Converter="{StaticResource FallbackText}" ConverterParameter="Untitled" Mode="OneWay">
+                                            <Binding Path="Title" Mode="OneWay" />
+                                            <Binding Source="{x:Static l:Loc.Instance}" Path="Language" />
+                                        </MultiBinding>
+                                    </Run.Text>
+                                </Run>
                             </TextBlock>
                         </DockPanel>
                     </Border>
-                    <Border DockPanel.Dock="Bottom" BorderBrush="#1F1F1F" BorderThickness="0,1,0,0" Padding="10,6">
+                    <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource PaneFooterLineBrush}" BorderThickness="0,1,0,0" Padding="10,6">
                         <DockPanel>
-                            <TextBlock Style="{StaticResource GlyphIcon}" FontSize="12" Foreground="#A8A8A8" Margin="0,0,6,0" Text="&#xE8B7;" />
-                            <TextBlock FontSize="11" Foreground="#A8A8A8" TextTrimming="CharacterEllipsis"
-                                       Text="{Binding StartingDirectory, TargetNullValue='(dossier du profil)'}" />
+                            <TextBlock Style="{StaticResource GlyphIcon}" FontSize="12" Foreground="{DynamicResource HintBrush}" Margin="0,0,6,0" Text="&#xE8B7;" />
+                            <TextBlock FontSize="11" Foreground="{DynamicResource HintBrush}" TextTrimming="CharacterEllipsis">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource FallbackText}" ConverterParameter="PaneNoFolder">
+                                        <Binding Path="StartingDirectory" />
+                                        <Binding Source="{x:Static l:Loc.Instance}" Path="Language" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </DockPanel>
                     </Border>
                     <TextBlock Margin="12,10" FontFamily="{StaticResource MonoFont}" FontSize="12"
-                               Foreground="{StaticResource TerminalTextBrush}" TextWrapping="Wrap"
-                               Text="{Binding Commandline, TargetNullValue='(commande du profil)'}" />
+                               Foreground="{DynamicResource TerminalTextBrush}" TextWrapping="Wrap">
+                        <TextBlock.Text>
+                            <MultiBinding Converter="{StaticResource FallbackText}" ConverterParameter="PaneNoCommand">
+                                <Binding Path="Commandline" />
+                                <Binding Source="{x:Static l:Loc.Instance}" Path="Language" />
+                            </MultiBinding>
+                        </TextBlock.Text>
+                    </TextBlock>
                 </DockPanel>
             </Border>
             <DataTemplate.Triggers>
                 <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                    <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                    <Setter TargetName="Frame" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
                     <Setter TargetName="Frame" Property="BorderThickness" Value="2" />
-                    <Setter TargetName="Header" Property="Background" Value="#172A33" />
+                    <Setter TargetName="Header" Property="Background" Value="{DynamicResource PaneHeaderSelectedBrush}" />
                     <Setter TargetName="Actions" Property="Visibility" Value="Visible" />
                 </DataTrigger>
             </DataTemplate.Triggers>
         </DataTemplate>
 
         <ContextMenu x:Key="PaneContextMenu">
-            <MenuItem Header="Diviser verticalement" Command="{Binding SplitVerticalCommand}">
+            <MenuItem Header="{l:Tr SplitVertically}" Command="{Binding SplitVerticalCommand}">
                 <MenuItem.Icon>
-                    <Path Style="{StaticResource StrokeIcon}" Stroke="#E8E8E8" Data="{StaticResource SplitVerticalIcon}" />
+                    <Path Style="{StaticResource StrokeIcon}" Stroke="{DynamicResource MenuIconBrush}" Data="{StaticResource SplitVerticalIcon}" />
                 </MenuItem.Icon>
             </MenuItem>
-            <MenuItem Header="Diviser horizontalement" Command="{Binding SplitHorizontalCommand}">
+            <MenuItem Header="{l:Tr SplitHorizontally}" Command="{Binding SplitHorizontalCommand}">
                 <MenuItem.Icon>
-                    <Path Style="{StaticResource StrokeIcon}" Stroke="#E8E8E8" Data="{StaticResource SplitHorizontalIcon}" />
+                    <Path Style="{StaticResource StrokeIcon}" Stroke="{DynamicResource MenuIconBrush}" Data="{StaticResource SplitHorizontalIcon}" />
                 </MenuItem.Icon>
             </MenuItem>
             <Separator />
-            <MenuItem Header="Supprimer le volet" Command="{Binding DeletePaneCommand}" />
+            <MenuItem Header="{l:Tr DeletePane}" Command="{Binding DeletePaneCommand}" />
         </ContextMenu>
     </Window.Resources>
 
@@ -94,60 +120,77 @@
         </Grid.RowDefinitions>
 
         <!-- Toolbar -->
-        <Border Grid.Row="0" Background="{StaticResource ChromeBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,0,1" Padding="12,8">
+        <Border Grid.Row="0" Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,0,1" Padding="12,8">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <ComboBox MinWidth="180" Margin="0,0,10,0" VerticalAlignment="Center"
                               ItemsSource="{Binding Installations}" SelectedItem="{Binding SelectedInstallation}"
-                              AutomationProperties.Name="Installation de Windows Terminal"
-                              ToolTip="{Binding SelectedInstallation.SettingsPath}" />
+                              AutomationProperties.Name="{l:Tr InstallationLabel}"
+                              ToolTip="{Binding SelectedInstallation.SettingsPath}">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock>
+                                    <TextBlock.Text>
+                                        <MultiBinding Converter="{StaticResource InstallationName}">
+                                            <Binding />
+                                            <Binding Source="{x:Static l:Loc.Instance}" Path="Language" />
+                                        </MultiBinding>
+                                    </TextBlock.Text>
+                                </TextBlock>
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
                     <Button Command="{Binding TestCommand}" Margin="0,0,6,0" Padding="12,6"
-                            ToolTip="Ouvre la disposition dans une nouvelle fenêtre, sans rien enregistrer">
+                            ToolTip="{l:Tr TestTooltip}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,6,0" Text="&#xE768;" />
-                            <TextBlock Text="Tester" />
+                            <TextBlock Text="{l:Tr Test}" />
                         </StackPanel>
                     </Button>
                     <Button Command="{Binding PublishCommand}" Style="{DynamicResource AccentButtonStyle}" Padding="14,6"
-                            Content="Ajouter à Windows Terminal…" />
+                            Content="{l:Tr AddToTerminal}" />
+                    <Button x:Name="PreferencesButton" Style="{StaticResource ToolbarButton}" Margin="8,0,0,0" Click="OnPreferences"
+                            ToolTip="{l:Tr Preferences}" AutomationProperties.Name="{l:Tr Preferences}">
+                        <TextBlock Style="{StaticResource GlyphIcon}" FontSize="15" Text="&#xE713;" />
+                    </Button>
                 </StackPanel>
 
                 <WrapPanel VerticalAlignment="Center">
                     <Button Style="{StaticResource ToolbarButton}" Command="{Binding NewLayoutCommand}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,6,0" Text="&#xE710;" />
-                            <TextBlock Text="Nouvelle" />
+                            <TextBlock Text="{l:Tr New}" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding ReloadCommand}" ToolTip="Relire settings.json">
+                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding ReloadCommand}" ToolTip="{l:Tr ReloadTooltip}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,6,0" Text="&#xE72C;" />
-                            <TextBlock Text="Recharger" />
+                            <TextBlock Text="{l:Tr Reload}" />
                         </StackPanel>
                     </Button>
-                    <Rectangle Width="1" Height="22" Fill="#3A3A3A" Margin="6,0" />
+                    <Rectangle Width="1" Height="22" Fill="{DynamicResource ToolbarSeparatorBrush}" Margin="6,0" />
                     <Button Style="{StaticResource ToolbarButton}" Command="{Binding SplitVerticalCommand}">
                         <StackPanel Orientation="Horizontal">
                             <Path Style="{StaticResource StrokeIcon}" Margin="0,0,6,0" Data="{StaticResource SplitVerticalIcon}" />
-                            <TextBlock Text="Diviser verticalement" />
+                            <TextBlock Text="{l:Tr SplitVertically}" />
                         </StackPanel>
                     </Button>
                     <Button Style="{StaticResource ToolbarButton}" Command="{Binding SplitHorizontalCommand}">
                         <StackPanel Orientation="Horizontal">
                             <Path Style="{StaticResource StrokeIcon}" Margin="0,0,6,0" Data="{StaticResource SplitHorizontalIcon}" />
-                            <TextBlock Text="Diviser horizontalement" />
+                            <TextBlock Text="{l:Tr SplitHorizontally}" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding EqualizeCommand}" ToolTip="Donner la même taille à tous les volets">
+                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding EqualizeCommand}" ToolTip="{l:Tr EqualizeTooltip}">
                         <StackPanel Orientation="Horizontal">
                             <Path Style="{StaticResource StrokeIcon}" Margin="0,0,6,0" Data="{StaticResource EqualizeIcon}" />
-                            <TextBlock Text="Égaliser" />
+                            <TextBlock Text="{l:Tr Equalize}" />
                         </StackPanel>
                     </Button>
-                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding DeletePaneCommand}" ToolTip="Supprimer le volet sélectionné">
+                    <Button Style="{StaticResource ToolbarButton}" Command="{Binding DeletePaneCommand}" ToolTip="{l:Tr DeleteSelectedPaneTooltip}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,6,0" Text="&#xE74D;" />
-                            <TextBlock Text="Supprimer" />
+                            <TextBlock Text="{l:Tr Delete}" />
                         </StackPanel>
                     </Button>
                 </WrapPanel>
@@ -163,24 +206,24 @@
             </Grid.ColumnDefinitions>
 
             <!-- Layout list -->
-            <Border Grid.Column="0" Background="{StaticResource SidebarBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,0,1,0">
+            <Border Grid.Column="0" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,0,1,0">
                 <DockPanel Margin="10,14,10,10">
                     <DockPanel DockPanel.Dock="Top" Margin="6,0,0,8">
                         <Button DockPanel.Dock="Right" Style="{StaticResource PaneActionButton}" Command="{Binding NewLayoutCommand}"
-                                ToolTip="Nouvelle disposition" AutomationProperties.Name="Nouvelle disposition">
+                                ToolTip="{l:Tr NewLayout}" AutomationProperties.Name="{l:Tr NewLayout}">
                             <TextBlock Style="{StaticResource GlyphIcon}" FontSize="12" Text="&#xE710;" />
                         </Button>
-                        <TextBlock Text="MES DISPOSITIONS" Style="{StaticResource SectionHeader}" Margin="0" VerticalAlignment="Center" />
+                        <TextBlock Text="{l:Tr MyLayoutsHeader}" Style="{StaticResource SectionHeader}" Margin="0" VerticalAlignment="Center" />
                     </DockPanel>
                     <Button DockPanel.Dock="Bottom" Command="{Binding DeleteLayoutCommand}" HorizontalAlignment="Stretch" Margin="0,8,0,0"
-                            ToolTip="Retire la disposition de Windows Terminal (ou supprime le brouillon)">
+                            ToolTip="{l:Tr RemoveLayoutTooltip}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,6,0" Text="&#xE74D;" />
-                            <TextBlock Text="Retirer / supprimer" />
+                            <TextBlock Text="{l:Tr RemoveLayout}" />
                         </StackPanel>
                     </Button>
                     <ListBox ItemsSource="{Binding Layouts}" SelectedItem="{Binding SelectedEntry}" Background="Transparent" BorderThickness="0"
-                             AutomationProperties.Name="Mes dispositions">
+                             AutomationProperties.Name="{l:Tr MyLayouts}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <DockPanel Margin="2,4">
@@ -192,7 +235,7 @@
                                     </Grid>
                                     <StackPanel>
                                         <TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding Status}" FontSize="11" Foreground="#B0B0B0" />
+                                        <TextBlock Text="{Binding Status}" FontSize="11" Foreground="{DynamicResource ListStatusBrush}" />
                                     </StackPanel>
                                 </DockPanel>
                             </DataTemplate>
@@ -204,32 +247,39 @@
             <!-- Preview -->
             <DockPanel Grid.Column="1" Margin="20,16,20,12">
                 <DockPanel DockPanel.Dock="Top">
-                    <Border DockPanel.Dock="Bottom" Height="1" Background="{StaticResource DividerBrush}" />
-                    <Border Background="#2A2A2A" CornerRadius="6,6,0,0" Padding="14,8" HorizontalAlignment="Left"
+                    <Border DockPanel.Dock="Bottom" Height="1" Background="{DynamicResource DividerBrush}" />
+                    <Border Background="{DynamicResource TabHeaderBrush}" CornerRadius="6,6,0,0" Padding="14,8" HorizontalAlignment="Left"
                             BorderThickness="0,2,0,0" BorderBrush="{Binding SelectedLayout.TabColor, Converter={StaticResource HexBrush}}"
                             Visibility="{Binding SelectedLayout, Converter={StaticResource NotNullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,8,0" Text="&#xE756;" />
-                            <TextBlock FontWeight="SemiBold" Text="{Binding SelectedLayout.TabTitle, TargetNullValue='(titre du volet actif)'}" />
+                            <TextBlock FontWeight="SemiBold">
+                                <TextBlock.Text>
+                                    <MultiBinding Converter="{StaticResource FallbackText}" ConverterParameter="ActivePaneTitle">
+                                        <Binding Path="SelectedLayout.TabTitle" />
+                                        <Binding Source="{x:Static l:Loc.Instance}" Path="Language" />
+                                    </MultiBinding>
+                                </TextBlock.Text>
+                            </TextBlock>
                         </StackPanel>
                     </Border>
-                    <TextBlock Text="Aperçu de l'onglet" Foreground="#8F8F8F" FontSize="12" VerticalAlignment="Bottom" Margin="10,0,0,8" />
+                    <TextBlock Text="{l:Tr TabPreview}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" VerticalAlignment="Bottom" Margin="10,0,0,8" />
                 </DockPanel>
 
                 <Border DockPanel.Dock="Top" Margin="0,12,0,0" Padding="12,8" CornerRadius="6"
-                        Background="#2B2416" BorderBrush="#7A5E1E" BorderThickness="1"
+                        Background="{DynamicResource WarningBackgroundBrush}" BorderBrush="{DynamicResource WarningBorderBrush}" BorderThickness="1"
                         Visibility="{Binding ElevationWarning, Converter={StaticResource NotNullToVisibility}, FallbackValue=Collapsed}">
                     <DockPanel>
-                        <TextBlock DockPanel.Dock="Left" Style="{StaticResource GlyphIcon}" Foreground="#F7B955" Margin="0,1,10,0"
+                        <TextBlock DockPanel.Dock="Left" Style="{StaticResource GlyphIcon}" Foreground="{DynamicResource WarningIconBrush}" Margin="0,1,10,0"
                                    VerticalAlignment="Top" Text="&#xE7BA;" />
                         <TextBlock Text="{Binding ElevationWarning}" TextWrapping="Wrap" FontSize="12" />
                     </DockPanel>
                 </Border>
 
                 <TextBlock DockPanel.Dock="Bottom" Style="{StaticResource Hint}" FontSize="12" Margin="0,10,0,0"
-                           Text="Cliquez un volet pour le sélectionner · glissez un séparateur pour redimensionner · clic droit sur un volet pour le diviser" />
+                           Text="{l:Tr CanvasHint}" />
 
-                <Border Background="{StaticResource CanvasBrush}" CornerRadius="8" Padding="14" Margin="0,12,0,0">
+                <Border Background="{DynamicResource CanvasBrush}" CornerRadius="8" Padding="14" Margin="0,12,0,0">
                     <Grid>
                         <controls:LayoutCanvas Layout="{Binding SelectedLayout}" SelectedPane="{Binding SelectedPane}"
                                                PaneTemplate="{StaticResource PaneTemplate}"
@@ -237,26 +287,25 @@
 
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="460"
                                     Visibility="{Binding SelectedEntry.Error, Converter={StaticResource NotNullToVisibility}, FallbackValue=Collapsed}">
-                            <TextBlock Text="Cette disposition n'a pas pu être relue" FontSize="16" FontWeight="SemiBold" TextAlignment="Center" />
+                            <TextBlock Text="{l:Tr UnreadableTitle}" FontSize="16" FontWeight="SemiBold" TextAlignment="Center" />
                             <TextBlock Text="{Binding SelectedEntry.Error}" Style="{StaticResource Hint}" FontSize="13" TextAlignment="Center" Margin="0,8" />
-                            <TextBlock Style="{StaticResource Hint}" FontSize="13" TextAlignment="Center"
-                                       Text="Elle a sans doute été modifiée à la main dans settings.json. Vous pouvez la retirer, ou la corriger puis recharger." />
+                            <TextBlock Style="{StaticResource Hint}" FontSize="13" TextAlignment="Center" Text="{l:Tr UnreadableHint}" />
                         </StackPanel>
 
                         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="420"
                                     Visibility="{Binding SelectedEntry, Converter={StaticResource NotNullToVisibility}, ConverterParameter=invert}">
-                            <TextBlock Text="Aucune disposition sélectionnée" FontSize="16" FontWeight="SemiBold" TextAlignment="Center" />
+                            <TextBlock Text="{l:Tr NoSelectionTitle}" FontSize="16" FontWeight="SemiBold" TextAlignment="Center" />
                             <TextBlock Style="{StaticResource Hint}" FontSize="13" TextAlignment="Center" Margin="0,8,0,14"
-                                       Text="Choisissez une disposition dans la liste, ou créez-en une à partir d'un modèle." />
+                                       Text="{l:Tr NoSelectionHint}" />
                             <Button HorizontalAlignment="Center" Command="{Binding NewLayoutCommand}" Style="{DynamicResource AccentButtonStyle}"
-                                    Padding="14,6" Content="Nouvelle disposition…" />
+                                    Padding="14,6" Content="{l:Tr NewLayoutEllipsis}" />
                         </StackPanel>
                     </Grid>
                 </Border>
             </DockPanel>
 
             <!-- Properties -->
-            <Border Grid.Column="2" Background="{StaticResource SidebarBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1,0,0,0">
+            <Border Grid.Column="2" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="1,0,0,0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" Visibility="{Binding SelectedLayout, Converter={StaticResource NotNullToVisibility}, FallbackValue=Collapsed}">
                     <StackPanel Margin="16">
 
@@ -264,60 +313,67 @@
                             <Ellipse Width="10" Height="10" Margin="0,0,8,0" VerticalAlignment="Center"
                                      Fill="{Binding SelectedPane.Number, Converter={StaticResource PaneColor}}" />
                             <TextBlock FontSize="15" FontWeight="SemiBold">
-                                <Run Text="Volet" /> <Run Text="{Binding SelectedPane.Number, Mode=OneWay}" /> <Run Text="—" /> <Run Text="{Binding SelectedPane.Title, Mode=OneWay, TargetNullValue='sans titre'}" />
+                                <Run Text="{l:Tr Pane}" /> <Run Text="{Binding SelectedPane.Number, Mode=OneWay}" /> <Run Text="—" /> <Run>
+                                    <Run.Text>
+                                        <MultiBinding Converter="{StaticResource FallbackText}" ConverterParameter="Untitled" Mode="OneWay">
+                                            <Binding Path="SelectedPane.Title" Mode="OneWay" />
+                                            <Binding Source="{x:Static l:Loc.Instance}" Path="Language" />
+                                        </MultiBinding>
+                                    </Run.Text>
+                                </Run>
                             </TextBlock>
                         </StackPanel>
 
-                        <TextBlock Text="Titre du volet" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{l:Tr PaneTitle}" Style="{StaticResource FieldLabel}" />
                         <TextBox Text="{Binding SelectedPane.Title, UpdateSourceTrigger=PropertyChanged}"
-                                 AutomationProperties.Name="Titre du volet" />
+                                 AutomationProperties.Name="{l:Tr PaneTitle}" />
 
-                        <TextBlock Text="Profil Windows Terminal" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{l:Tr WtProfile}" Style="{StaticResource FieldLabel}" />
                         <ComboBox ItemsSource="{Binding Profiles}" DisplayMemberPath="Display" SelectedValuePath="Reference"
                                   SelectedValue="{Binding SelectedPane.Profile, Converter={StaticResource NullToEmpty}}"
-                                  AutomationProperties.Name="Profil Windows Terminal" HorizontalAlignment="Stretch" />
+                                  AutomationProperties.Name="{l:Tr WtProfile}" HorizontalAlignment="Stretch" />
 
-                        <TextBlock Text="Ligne de commande" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{l:Tr CommandLine}" Style="{StaticResource FieldLabel}" />
                         <TextBox Text="{Binding SelectedPane.Commandline, UpdateSourceTrigger=PropertyChanged}"
                                  FontFamily="{StaticResource MonoFont}" FontSize="12"
-                                 AutomationProperties.Name="Ligne de commande" />
-                        <TextBlock Style="{StaticResource Hint}" Text="Vide = la commande du profil. Ex. : pwsh.exe -NoExit -Command &quot;npm run dev&quot;" />
+                                 AutomationProperties.Name="{l:Tr CommandLine}" />
+                        <TextBlock Style="{StaticResource Hint}" Text="{l:Tr CommandLineHint}" />
 
-                        <TextBlock Text="Dossier de démarrage" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{l:Tr StartingDirectory}" Style="{StaticResource FieldLabel}" />
                         <DockPanel>
                             <Button DockPanel.Dock="Right" Command="{Binding BrowseFolderCommand}" Margin="6,0,0,0" Padding="10,6"
-                                    ToolTip="Parcourir les dossiers" AutomationProperties.Name="Parcourir les dossiers">
+                                    ToolTip="{l:Tr BrowseFolders}" AutomationProperties.Name="{l:Tr BrowseFolders}">
                                 <TextBlock Style="{StaticResource GlyphIcon}" Text="&#xE8B7;" />
                             </Button>
                             <TextBox Text="{Binding SelectedPane.StartingDirectory, UpdateSourceTrigger=PropertyChanged}"
                                      FontFamily="{StaticResource MonoFont}" FontSize="12"
-                                     AutomationProperties.Name="Dossier de démarrage" />
+                                     AutomationProperties.Name="{l:Tr StartingDirectory}" />
                         </DockPanel>
 
                         <DockPanel Margin="0,12,0,6">
                             <TextBlock DockPanel.Dock="Right" FontSize="12">
                                 <Run Text="{Binding SelectedPaneShare, Mode=OneWay, StringFormat={}{0:0}}" /><Run Text=" %" />
                             </TextBlock>
-                            <TextBlock Text="Taille dans sa division" FontSize="12" Foreground="#C8C8C8" />
+                            <TextBlock Text="{l:Tr SizeInSplit}" FontSize="12" Foreground="{DynamicResource FieldLabelBrush}" />
                         </DockPanel>
                         <Slider Minimum="5" Maximum="95" SmallChange="1" LargeChange="5" IsSnapToTickEnabled="True" TickFrequency="1"
                                 Value="{Binding SelectedPaneShare}" IsEnabled="{Binding CanResizeSelectedPane}"
-                                AutomationProperties.Name="Taille dans sa division" />
+                                AutomationProperties.Name="{l:Tr SizeInSplit}" />
 
-                        <CheckBox Content="Focus sur ce volet à l'ouverture" Margin="0,12,0,0"
+                        <CheckBox Content="{l:Tr FocusOnStart}" Margin="0,12,0,0"
                                   IsChecked="{Binding SelectedPane.FocusOnStart}" />
 
-                        <Border Height="1" Background="{StaticResource DividerBrush}" Margin="0,18" />
+                        <Border Height="1" Background="{DynamicResource DividerBrush}" Margin="0,18" />
 
-                        <TextBlock Text="ONGLET" Style="{StaticResource SectionHeader}" />
+                        <TextBlock Text="{l:Tr TabSection}" Style="{StaticResource SectionHeader}" />
 
-                        <TextBlock Text="Nom (palette de commandes et menu)" Style="{StaticResource FieldLabel}" Margin="0,4,0,6" />
-                        <TextBox Text="{Binding SelectedLayout.Name, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Nom de la disposition" />
+                        <TextBlock Text="{l:Tr LayoutNameLabel}" Style="{StaticResource FieldLabel}" Margin="0,4,0,6" />
+                        <TextBox Text="{Binding SelectedLayout.Name, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{l:Tr LayoutName}" />
 
-                        <TextBlock Text="Icône (palette de commandes et menu)" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{l:Tr IconLabel}" Style="{StaticResource FieldLabel}" />
                         <DockPanel>
                             <Border DockPanel.Dock="Left" Width="34" Height="34" CornerRadius="6" Margin="0,0,8,0"
-                                    Background="#141414" BorderBrush="#3A3A3A" BorderThickness="1">
+                                    Background="{DynamicResource InputWellBrush}" BorderBrush="{DynamicResource InputWellBorderBrush}" BorderThickness="1">
                                 <Grid>
                                     <Image Width="20" Height="20" Source="{Binding SelectedLayout.Icon, Converter={StaticResource IconImage}}" />
                                     <TextBlock FontFamily="Segoe UI Emoji, Segoe Fluent Icons, Segoe MDL2 Assets" FontSize="16"
@@ -326,11 +382,11 @@
                                 </Grid>
                             </Border>
                             <Button DockPanel.Dock="Right" Command="{Binding BrowseIconCommand}" Margin="6,0,0,0" Padding="10,6"
-                                    ToolTip="Choisir une image" AutomationProperties.Name="Choisir une image">
+                                    ToolTip="{l:Tr ChooseImage}" AutomationProperties.Name="{l:Tr ChooseImage}">
                                 <TextBlock Style="{StaticResource GlyphIcon}" Text="&#xE8B9;" />
                             </Button>
                             <TextBox Text="{Binding SelectedLayout.Icon, UpdateSourceTrigger=PropertyChanged}" VerticalContentAlignment="Center"
-                                     AutomationProperties.Name="Icône" />
+                                     AutomationProperties.Name="{l:Tr Icon}" />
                         </DockPanel>
                         <ItemsControl ItemsSource="{Binding IconSuggestions}" Margin="0,8,0,0" Focusable="False">
                             <ItemsControl.ItemsPanel>
@@ -348,15 +404,13 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                        <TextBlock Style="{StaticResource Hint}"
-                                   Text="Image (.png, .ico, .jpg), emoji ou glyphe Segoe Fluent Icons. Vide = aucune icône. Un fichier .ico sert aussi d'icône au raccourci Bureau." />
+                        <TextBlock Style="{StaticResource Hint}" Text="{l:Tr IconHint}" />
 
-                        <TextBlock Text="Titre de l'onglet" Style="{StaticResource FieldLabel}" />
-                        <TextBox Text="{Binding SelectedLayout.TabTitle, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Titre de l'onglet" />
-                        <TextBlock Style="{StaticResource Hint}"
-                                   Text="Indépendant des titres de volets. Vide = l'onglet affiche le titre du volet actif." />
+                        <TextBlock Text="{l:Tr TabTitle}" Style="{StaticResource FieldLabel}" />
+                        <TextBox Text="{Binding SelectedLayout.TabTitle, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{l:Tr TabTitle}" />
+                        <TextBlock Style="{StaticResource Hint}" Text="{l:Tr TabTitleHint}" />
 
-                        <TextBlock Text="Couleur de l'onglet" Style="{StaticResource FieldLabel}" />
+                        <TextBlock Text="{l:Tr TabColor}" Style="{StaticResource FieldLabel}" />
                         <WrapPanel>
                             <ItemsControl ItemsSource="{Binding TabColors}">
                                 <ItemsControl.ItemsPanel>
@@ -376,28 +430,28 @@
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
                             <Button Width="30" Height="30" MinWidth="0" MinHeight="0" Padding="0" Margin="0,0,6,6"
-                                    ToolTip="Aucune couleur" AutomationProperties.Name="Aucune couleur"
+                                    ToolTip="{l:Tr NoColor}" AutomationProperties.Name="{l:Tr NoColor}"
                                     Command="{Binding SetTabColorCommand}" CommandParameter="{x:Null}">
-                                <Ellipse Width="18" Height="18" Stroke="#8A8A8A" StrokeDashArray="2 2" />
+                                <Ellipse Width="18" Height="18" Stroke="{DynamicResource NoColorStrokeBrush}" StrokeDashArray="2 2" />
                             </Button>
                         </WrapPanel>
                         <DockPanel Margin="0,2,0,0">
-                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11" Margin="0,0,8,0" BorderBrush="#4A4A4A" BorderThickness="1"
+                            <Border DockPanel.Dock="Left" Width="22" Height="22" CornerRadius="11" Margin="0,0,8,0" BorderBrush="{DynamicResource SwatchBorderBrush}" BorderThickness="1"
                                     Background="{Binding SelectedLayout.TabColor, Converter={StaticResource HexBrush}}" />
                             <TextBox Text="{Binding SelectedLayout.TabColor, UpdateSourceTrigger=PropertyChanged}"
-                                     FontFamily="{StaticResource MonoFont}" FontSize="12" AutomationProperties.Name="Couleur de l'onglet (hexadécimal)" />
+                                     FontFamily="{StaticResource MonoFont}" FontSize="12" AutomationProperties.Name="{l:Tr TabColorHex}" />
                         </DockPanel>
 
                         <StackPanel Margin="0,16,0,0" Visibility="{Binding SelectedEntry.IsPublished, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}">
                             <TextBlock Style="{StaticResource Hint}">
-                                <Run Text="Action :" /> <Run Text="{Binding SelectedEntry.ActionId, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" />
+                                <Run Text="{l:Tr ActionLabel}" /> <Run Text="{Binding SelectedEntry.ActionId, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" />
                             </TextBlock>
                             <TextBlock Style="{StaticResource Hint}" Visibility="{Binding SelectedEntry.Keys, Converter={StaticResource NotNullToVisibility}, FallbackValue=Collapsed}">
-                                <Run Text="Raccourci clavier :" /> <Run Text="{Binding SelectedEntry.Keys, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" />
+                                <Run Text="{l:Tr KeysLabel}" /> <Run Text="{Binding SelectedEntry.Keys, Mode=OneWay}" FontFamily="{StaticResource MonoFont}" />
                             </TextBlock>
-                            <TextBlock Style="{StaticResource Hint}" Text="Présente dans le menu « Nouvel onglet »"
+                            <TextBlock Style="{StaticResource Hint}" Text="{l:Tr InNewTabMenu}"
                                        Visibility="{Binding SelectedEntry.InNewTabMenu, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
-                            <TextBlock Style="{StaticResource Hint}" Text="Raccourci présent sur le Bureau"
+                            <TextBlock Style="{StaticResource Hint}" Text="{l:Tr HasDesktopShortcut}"
                                        Visibility="{Binding SelectedEntry.HasShortcut, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                         </StackPanel>
                     </StackPanel>
@@ -406,25 +460,25 @@
         </Grid>
 
         <!-- Generated command -->
-        <Border Grid.Row="2" Background="#181818" BorderBrush="{StaticResource DividerBrush}" BorderThickness="0,1,0,0" Padding="14,8">
+        <Border Grid.Row="2" Background="{DynamicResource CommandBarBrush}" BorderBrush="{DynamicResource DividerBrush}" BorderThickness="0,1,0,0" Padding="14,8">
             <DockPanel>
-                <TextBlock DockPanel.Dock="Left" Text="Commande générée" FontSize="12" FontWeight="SemiBold"
-                           Foreground="{StaticResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                <TextBlock DockPanel.Dock="Left" Text="{l:Tr GeneratedCommand}" FontSize="12" FontWeight="SemiBold"
+                           Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
                 <Button DockPanel.Dock="Right" Command="{Binding CopyCommand}" Margin="12,0,0,0" Padding="12,6">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,6,0" Text="&#xE8C8;" />
-                        <TextBlock Text="Copier" />
+                        <TextBlock Text="{l:Tr Copy}" />
                     </StackPanel>
                 </Button>
                 <TextBox Text="{Binding CommandPreview, Mode=OneWay}" IsReadOnly="True" FontFamily="{StaticResource MonoFont}" FontSize="11.5"
                          HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" TextWrapping="NoWrap"
-                         AutomationProperties.Name="Commande wt.exe générée" />
+                         AutomationProperties.Name="{l:Tr GeneratedCommandName}" />
             </DockPanel>
         </Border>
 
         <!-- Status -->
-        <Border Grid.Row="3" Background="{StaticResource ChromeBrush}" Padding="14,5">
-            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{StaticResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" />
+        <Border Grid.Row="3" Background="{DynamicResource ChromeBrush}" Padding="14,5">
+            <TextBlock Text="{Binding StatusMessage}" FontSize="12" Foreground="{DynamicResource SecondaryTextBrush}" TextTrimming="CharacterEllipsis" />
         </Border>
     </Grid>
 </Window>

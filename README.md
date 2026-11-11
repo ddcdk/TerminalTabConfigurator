@@ -10,8 +10,6 @@ A small Windows utility (WPF, .NET 10) to **graphically design a Windows Termina
 
 Example: a tab split vertically, with its right half split horizontally, each pane running `pwsh.exe` in a different folder. Once published, the layout opens in one click from the command palette, the "New tab" menu, a keyboard shortcut or a desktop shortcut.
 
-> The user interface is in French. Interface labels are quoted below with their English meaning.
-
 ## Features
 
 - **Visual editor**: split a pane vertically or horizontally (toolbar, pane buttons, right-click), delete, equalize, resize with the mouse (the percentage is shown on each splitter).
@@ -20,14 +18,20 @@ Example: a tab split vertically, with its right half split horizontally, each pa
 - **Per tab**: name (shown in the palette and the menu), icon, tab title, tab color.
 - **Publishing to `settings.json`**, with an exact preview of the JSON written, a timestamped backup, and detection of keyboard shortcut conflicts.
 - **Reading back and editing** layouts already published: they are loaded from `settings.json` at startup.
-- **Test** ("Tester"): opens the layout right away in Windows Terminal, without publishing anything.
+- **Test**: opens the layout right away in Windows Terminal, without publishing anything.
 - **Generated command**: the equivalent `wt.exe` command line, ready to copy into a script.
 - Supports Windows Terminal, Windows Terminal Preview, Canary and the unpackaged version (installation picker in the toolbar).
+- **English or French interface**, following the Windows display language by default.
+- **Dark or light theme**, following the Windows app mode by default.
+
+## Download
+
+Each [release](https://github.com/ddcdk/TerminalTabConfigurator/releases) has a self-contained build for Windows x64: unzip it and run `TerminalTabConfigurator.exe`. No .NET installation is needed.
 
 ## Requirements
 
 - Windows 10 or 11 with a recent version of [Windows Terminal](https://aka.ms/terminal) (tested with 1.24).
-- [.NET 10 SDK](https://dotnet.microsoft.com/download) to build.
+- [.NET 10 SDK](https://dotnet.microsoft.com/download) to build from source.
 
 ## Build and run
 
@@ -44,13 +48,22 @@ dotnet test
 
 ## Usage
 
-1. **"Nouvelle"** (New): pick a template, a name, a profile and a default folder.
+1. **New**: pick a template, a name, a profile and a default folder.
 2. Click a pane to select it, split or delete it, and drag the splitters to adjust sizes.
 3. Fill in the properties of the selected pane and of the tab in the right-hand panel.
-4. **"Tester"** (Test) to check the result in Windows Terminal.
-5. **"Ajouter à Windows Terminal…"** (Add to Windows Terminal): choose where to add it (palette, keyboard shortcut, "New tab" menu, desktop shortcut), review the JSON, then publish.
+4. **Test** to check the result in Windows Terminal.
+5. **Add to Windows Terminal…**: choose where to add it (palette, keyboard shortcut, "New tab" menu, desktop shortcut), review the JSON, then publish.
 
-Windows Terminal reloads `settings.json` on its own, so the layout is available immediately. To change it later, select it under **"Mes dispositions"** (My layouts), edit it, then publish again: the existing entry is updated. **"Retirer / supprimer"** (Remove / delete) removes it from `settings.json`.
+Windows Terminal reloads `settings.json` on its own, so the layout is available immediately. To change it later, select it under **My layouts**, edit it, then publish again: the existing entry is updated. **Remove / delete** removes it from `settings.json`.
+
+### Language and theme
+
+The gear button at the right of the toolbar opens the preferences:
+
+- **Language**: system language (French when Windows displays French, English otherwise), Français or English;
+- **Theme**: system theme, Dark or Light.
+
+Changes apply immediately and are saved in `%APPDATA%\TerminalTabConfigurator\preferences.json`.
 
 ### Titles
 
@@ -126,11 +139,13 @@ src/
     Generation/   newTab / splitPane / focusPane steps, action JSON, wt.exe command line
     Parsing/      Reads a multipleActions action back into a pane tree
     Settings/     settings.json read/write, detected installations, elevation analysis
-  TerminalTabConfigurator/             WPF application (dark Fluent theme, MVVM)
+  TerminalTabConfigurator/             WPF application (Fluent theme, MVVM)
     Controls/     LayoutCanvas: interactive pane preview
     Dialogs/      New layout, Add to Windows Terminal
+    Localization/ French and English texts, {l:Tr} markup extension
+    Themes/       Dark and light palettes
     ViewModels/   MainViewModel, LayoutEntry
-    Services/     Desktop shortcut creation
+    Services/     Desktop shortcuts, preferences, theme switching
     Assets/       Application icon
 tests/
   TerminalTabConfigurator.Core.Tests/  xUnit tests

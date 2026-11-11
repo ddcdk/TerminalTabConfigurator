@@ -1,7 +1,9 @@
 namespace TerminalTabConfigurator.Core.Settings;
 
+public enum TerminalChannel { Stable, Preview, Canary, Unpackaged }
+
 /// <summary>A Windows Terminal installation and the settings.json it reads.</summary>
-public sealed record TerminalInstallation(string DisplayName, string SettingsPath)
+public sealed record TerminalInstallation(TerminalChannel Channel, string DisplayName, string SettingsPath)
 {
     public override string ToString() => DisplayName;
 
@@ -13,10 +15,10 @@ public sealed record TerminalInstallation(string DisplayName, string SettingsPat
 
         TerminalInstallation[] candidates =
         [
-            new("Windows Terminal", Packaged("Microsoft.WindowsTerminal_8wekyb3d8bbwe")),
-            new("Windows Terminal Preview", Packaged("Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe")),
-            new("Windows Terminal Canary", Packaged("Microsoft.WindowsTerminalCanary_8wekyb3d8bbwe")),
-            new("Windows Terminal (non empaqueté)", Path.Combine(localAppData, "Microsoft", "Windows Terminal", "settings.json")),
+            new(TerminalChannel.Stable, "Windows Terminal", Packaged("Microsoft.WindowsTerminal_8wekyb3d8bbwe")),
+            new(TerminalChannel.Preview, "Windows Terminal Preview", Packaged("Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe")),
+            new(TerminalChannel.Canary, "Windows Terminal Canary", Packaged("Microsoft.WindowsTerminalCanary_8wekyb3d8bbwe")),
+            new(TerminalChannel.Unpackaged, "Windows Terminal (unpackaged)", Path.Combine(localAppData, "Microsoft", "Windows Terminal", "settings.json")),
         ];
 
         return candidates.Where(c => File.Exists(c.SettingsPath)).ToList();

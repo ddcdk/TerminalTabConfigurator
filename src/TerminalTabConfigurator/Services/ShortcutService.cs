@@ -1,5 +1,6 @@
 using System.IO;
 using System.Runtime.InteropServices;
+using TerminalTabConfigurator.Localization;
 
 namespace TerminalTabConfigurator.Services;
 
@@ -24,11 +25,11 @@ public static class ShortcutService
     /// <param name="iconFile">Shortcut icon; only .ico, .exe and .dll files are used (otherwise the Windows Terminal icon).</param>
     public static string Create(string layoutName, string arguments, bool runAsAdministrator = false, string? iconFile = null)
     {
-        var wt = FindWtExe() ?? throw new InvalidOperationException("wt.exe est introuvable : Windows Terminal est-il installé ?");
+        var wt = FindWtExe() ?? throw new InvalidOperationException(Loc.T("WtNotFound"));
         var path = GetPath(layoutName);
 
         var shellType = Type.GetTypeFromProgID("WScript.Shell")
-                        ?? throw new InvalidOperationException("WScript.Shell n'est pas disponible.");
+                        ?? throw new InvalidOperationException(Loc.T("WScriptMissing"));
         dynamic shell = Activator.CreateInstance(shellType)!;
         try
         {
@@ -37,7 +38,7 @@ public static class ShortcutService
             {
                 link.TargetPath = wt;
                 link.Arguments = arguments;
-                link.Description = $"Ouvre la disposition « {layoutName} » dans Windows Terminal";
+                link.Description = Loc.F("ShortcutDescription", layoutName);
                 if (iconFile is not null && Path.GetExtension(iconFile).ToLowerInvariant() is ".ico" or ".exe" or ".dll")
                     link.IconLocation = iconFile + ",0";
                 link.Save();
@@ -77,6 +78,6 @@ public static class ShortcutService
     {
         var invalid = Path.GetInvalidFileNameChars();
         var clean = new string(name.Select(c => invalid.Contains(c) ? '_' : c).ToArray()).Trim();
-        return clean.Length > 0 ? clean : "Disposition";
+        return clean.Length > 0 ? clean : Loc.T("DefaultShortcutName");
     }
 }

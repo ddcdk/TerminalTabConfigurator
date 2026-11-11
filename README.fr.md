@@ -21,11 +21,17 @@ Exemple : un onglet divisé verticalement, dont la moitié droite est elle-même
 - **Tester** : ouvre la disposition tout de suite dans Windows Terminal, sans rien publier.
 - **Commande générée** : la ligne `wt.exe` équivalente, à copier dans un script.
 - Prise en charge de Windows Terminal, Windows Terminal Preview, Canary et de la version non empaquetée (choix de l'installation dans la barre d'outils).
+- **Interface en français ou en anglais**, alignée par défaut sur la langue d'affichage de Windows.
+- **Thème sombre ou clair**, aligné par défaut sur le mode des applications Windows.
+
+## Téléchargement
+
+Chaque [release](https://github.com/ddcdk/TerminalTabConfigurator/releases) contient une version autonome (self-contained) pour Windows x64 : décompressez-la et lancez `TerminalTabConfigurator.exe`. Aucune installation de .NET n'est nécessaire.
 
 ## Prérequis
 
 - Windows 10 ou 11 avec une version récente de [Windows Terminal](https://aka.ms/terminal) (testé avec la 1.24).
-- [SDK .NET 10](https://dotnet.microsoft.com/download) pour compiler.
+- [SDK .NET 10](https://dotnet.microsoft.com/download) pour compiler depuis les sources.
 
 ## Compiler et lancer
 
@@ -49,6 +55,15 @@ dotnet test
 5. **Ajouter à Windows Terminal…** : choisissez où l'ajouter (palette, raccourci clavier, menu « Nouvel onglet », raccourci Bureau), vérifiez le JSON, puis publiez.
 
 Windows Terminal recharge `settings.json` tout seul : la disposition est disponible immédiatement. Pour la modifier plus tard, sélectionnez-la dans **Mes dispositions**, changez-la, puis publiez à nouveau (l'entrée existante est mise à jour). **Retirer / supprimer** l'enlève de `settings.json`.
+
+### Langue et thème
+
+Le bouton en forme d'engrenage, à droite de la barre d'outils, ouvre les préférences :
+
+- **Langue** : langue du système (français si Windows est en français, anglais sinon), Français ou English ;
+- **Thème** : thème du système, Sombre ou Clair.
+
+Les changements s'appliquent immédiatement et sont enregistrés dans `%APPDATA%\TerminalTabConfigurator\preferences.json`.
 
 ### Titres
 
@@ -124,11 +139,13 @@ src/
     Generation/   Étapes newTab / splitPane / focusPane, JSON des actions, ligne de commande wt.exe
     Parsing/      Relecture d'une action multipleActions en arbre de volets
     Settings/     Lecture/écriture de settings.json, installations détectées, analyse de l'élévation
-  TerminalTabConfigurator/             Application WPF (thème Fluent sombre, MVVM)
+  TerminalTabConfigurator/             Application WPF (thème Fluent, MVVM)
     Controls/     LayoutCanvas : aperçu interactif des volets
     Dialogs/      Nouvelle disposition, Ajouter à Windows Terminal
+    Localization/ Textes français et anglais, extension XAML {l:Tr}
+    Themes/       Palettes sombre et claire
     ViewModels/   MainViewModel, LayoutEntry
-    Services/     Création des raccourcis du Bureau
+    Services/     Raccourcis du Bureau, préférences, changement de thème
     Assets/       Icône de l'application
 tests/
   TerminalTabConfigurator.Core.Tests/  Tests xUnit

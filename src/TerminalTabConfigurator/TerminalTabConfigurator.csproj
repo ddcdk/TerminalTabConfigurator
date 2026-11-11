@@ -11,6 +11,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
     <AssemblyTitle>TerminalTabConfigurator</AssemblyTitle>
+    <Version>0.1.0</Version>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <!-- Fluent ThemeMode is still flagged experimental in WPF. -->
     <NoWarn>$(NoWarn);WPF0001</NoWarn>

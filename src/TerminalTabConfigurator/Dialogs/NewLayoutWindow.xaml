@@ -2,26 +2,27 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:TerminalTabConfigurator.Controls"
-        Title="Nouvelle disposition"
+        xmlns:l="clr-namespace:TerminalTabConfigurator.Localization"
+        Title="{l:Tr NewLayout}"
         Width="820" Height="640" MinWidth="700" MinHeight="520"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-        Background="{StaticResource AppBackgroundBrush}">
+        Background="{DynamicResource AppBackgroundBrush}">
 
     <Window.Resources>
         <DataTemplate x:Key="MiniPane">
-            <Border CornerRadius="3" Background="#0C0C0C" BorderThickness="0,2,0,0"
+            <Border CornerRadius="3" Background="{DynamicResource PaneBrush}" BorderThickness="0,2,0,0"
                     BorderBrush="{Binding Number, Converter={StaticResource PaneColor}}" />
         </DataTemplate>
     </Window.Resources>
 
     <DockPanel Margin="20">
-        <TextBlock DockPanel.Dock="Top" Text="Partir d'un modèle" FontSize="18" FontWeight="SemiBold" />
+        <TextBlock DockPanel.Dock="Top" Text="{l:Tr StartFromTemplate}" FontSize="18" FontWeight="SemiBold" />
         <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}" FontSize="12" Margin="0,4,0,12"
-                   Text="Choisissez un découpage. Vous pourrez ensuite diviser, supprimer et redimensionner les volets librement." />
+                   Text="{l:Tr TemplateHint}" />
 
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,16,0,0">
-            <Button Content="Annuler" IsCancel="True" MinWidth="100" Margin="0,0,8,0" />
-            <Button x:Name="CreateButton" Content="Créer" IsDefault="True" MinWidth="100" Style="{DynamicResource AccentButtonStyle}" Click="OnCreate" />
+            <Button Content="{l:Tr Cancel}" IsCancel="True" MinWidth="100" Margin="0,0,8,0" />
+            <Button x:Name="CreateButton" Content="{l:Tr Create}" IsDefault="True" MinWidth="100" Style="{DynamicResource AccentButtonStyle}" Click="OnCreate" />
         </StackPanel>
 
         <Grid DockPanel.Dock="Bottom" Margin="0,12,0,0">
@@ -38,26 +39,26 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0" Grid.Column="0" Text="Nom" Style="{StaticResource FieldLabel}" Margin="0,0,0,6" />
-            <TextBox Grid.Row="1" Grid.Column="0" x:Name="NameBox" AutomationProperties.Name="Nom de la disposition" TextChanged="OnInputChanged" />
+            <TextBlock Grid.Row="0" Grid.Column="0" Text="{l:Tr Name}" Style="{StaticResource FieldLabel}" Margin="0,0,0,6" />
+            <TextBox Grid.Row="1" Grid.Column="0" x:Name="NameBox" AutomationProperties.Name="{l:Tr LayoutName}" TextChanged="OnInputChanged" />
 
-            <TextBlock Grid.Row="0" Grid.Column="2" Text="Profil de tous les volets" Style="{StaticResource FieldLabel}" Margin="0,0,0,6" />
+            <TextBlock Grid.Row="0" Grid.Column="2" Text="{l:Tr ProfileAllPanes}" Style="{StaticResource FieldLabel}" Margin="0,0,0,6" />
             <ComboBox Grid.Row="1" Grid.Column="2" x:Name="ProfileBox" DisplayMemberPath="Display" SelectedValuePath="Reference"
-                      AutomationProperties.Name="Profil de tous les volets" HorizontalAlignment="Stretch" />
+                      AutomationProperties.Name="{l:Tr ProfileAllPanes}" HorizontalAlignment="Stretch" />
 
-            <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Text="Dossier de départ (facultatif, appliqué à tous les volets)" Style="{StaticResource FieldLabel}" />
+            <TextBlock Grid.Row="2" Grid.ColumnSpan="3" Text="{l:Tr StartFolderLabel}" Style="{StaticResource FieldLabel}" />
             <DockPanel Grid.Row="3" Grid.ColumnSpan="3">
                 <Button DockPanel.Dock="Right" Margin="6,0,0,0" Padding="10,6" Click="OnBrowse"
-                        ToolTip="Parcourir les dossiers" AutomationProperties.Name="Parcourir les dossiers">
+                        ToolTip="{l:Tr BrowseFolders}" AutomationProperties.Name="{l:Tr BrowseFolders}">
                     <TextBlock Style="{StaticResource GlyphIcon}" Text="&#xE8B7;" />
                 </Button>
-                <TextBox x:Name="FolderBox" FontFamily="{StaticResource MonoFont}" FontSize="12" AutomationProperties.Name="Dossier de départ" />
+                <TextBox x:Name="FolderBox" FontFamily="{StaticResource MonoFont}" FontSize="12" AutomationProperties.Name="{l:Tr StartingDirectory}" />
             </DockPanel>
-            <TextBlock Grid.Row="4" Grid.ColumnSpan="3" x:Name="ErrorText" Foreground="#FF8C8C" FontSize="12" Margin="0,8,0,0" Visibility="Collapsed" />
+            <TextBlock Grid.Row="4" Grid.ColumnSpan="3" x:Name="ErrorText" Foreground="{DynamicResource ErrorTextBrush}" FontSize="12" Margin="0,8,0,0" Visibility="Collapsed" />
         </Grid>
 
         <ListBox x:Name="TemplateList" Background="Transparent" BorderThickness="0"
-                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="Modèles"
+                 ScrollViewer.HorizontalScrollBarVisibility="Disabled" AutomationProperties.Name="{l:Tr Templates}"
                  SelectionChanged="OnTemplateChanged" MouseDoubleClick="OnTemplateDoubleClick">
             <ListBox.ItemsPanel>
                 <ItemsPanelTemplate>
@@ -67,12 +68,12 @@
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Width="166" Margin="4">
-                        <Border Height="96" Background="{StaticResource CanvasBrush}" CornerRadius="6" Padding="6">
+                        <Border Height="96" Background="{DynamicResource CanvasBrush}" CornerRadius="6" Padding="6">
                             <controls:LayoutCanvas Layout="{Binding Preview}" IsInteractive="False" Gap="4"
                                                    PaneTemplate="{StaticResource MiniPane}" />
                         </Border>
-                        <TextBlock Text="{Binding Template.Name}" FontWeight="SemiBold" Margin="2,8,0,0" TextTrimming="CharacterEllipsis" />
-                        <TextBlock Text="{Binding Template.Description}" Style="{StaticResource Hint}" Margin="2,2,0,0" />
+                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" Margin="2,8,0,0" TextTrimming="CharacterEllipsis" />
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource Hint}" Margin="2,2,0,0" />
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
