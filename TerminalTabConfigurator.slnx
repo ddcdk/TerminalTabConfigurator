@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/TerminalTabConfigurator.Core/TerminalTabConfigurator.Core.csproj" />
+    <Project Path="src/TerminalTabConfigurator/TerminalTabConfigurator.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TerminalTabConfigurator.Core.Tests/TerminalTabConfigurator.Core.Tests.csproj" />
+  </Folder>
+</Solution>

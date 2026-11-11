@@ -1,0 +1,62 @@
+## Uploads ##
+uploads/
+
+## Visual Studio ##
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+
+## VS Code ##
+.vscode/
+
+## Database ##
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+
+## OS ##
+.DS_Store
+Thumbs.db
+
+## Node.js (if applicable) ##
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## User-specific files ##
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Publish output ##
+[Pp]ublish/
+
+## Environment files ##
+.env
+.env.local
+.env.*.local
+
+## Backup and recovery files ##
+*.bak
+*.tmp
+*.temp
+
+## Local Helm values (secrets) ##
+helm/values-*.yaml
+
+## Tool artifacts (Playwright MCP logs and exports, Serena cache, headroom lock) ##
+.playwright-mcp/
+.serena/
+.claude/.headroom_wrap_settings.lock
+.headroom/
+
+# Archives downloaded by restore.ps1 (personal data)
+backups/
