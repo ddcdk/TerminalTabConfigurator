@@ -4,6 +4,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.2] - 2026-11-12
+
 ### Added
 
 - **Import a profile as a layout**: the new **Import** button lists the profiles whose command line starts `wt.exe` (`wt.exe -w 0 nt … ; sp … ; fp …`) and turns the chosen one into a new, unpublished layout (panes, titles, profiles, folders, command lines, sizes, focus, tab color, icon). The profile itself is left unchanged.
@@ -46,4 +48,5 @@ First public version.
 - Application icon, README in English and French.
 - Self-contained build for Windows x64 attached to the release.
 
+[0.2]: https://github.com/ddcdk/TerminalTabConfigurator/releases/tag/v0.2
 [0.1]: https://github.com/ddcdk/TerminalTabConfigurator/releases/tag/v0.1
