@@ -1,3 +1,8 @@
+// TerminalTabConfigurator
+// Copyright (C) 2026 Delfim Da Costa
+// SPDX-License-Identifier: GPL-3.0-or-later
+// See the LICENSE file at the root of the project.
+
 using System.Globalization;
 using System.Text.Json.Nodes;
 using TerminalTabConfigurator.Core.Model;

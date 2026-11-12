@@ -12,6 +12,9 @@
     <UseWPF>true</UseWPF>
     <AssemblyTitle>TerminalTabConfigurator</AssemblyTitle>
     <Version>0.1.0</Version>
+    <Authors>Delfim Da Costa</Authors>
+    <Copyright>Copyright (C) 2026 Delfim Da Costa</Copyright>
+    <PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <!-- Fluent ThemeMode is still flagged experimental in WPF. -->
     <NoWarn>$(NoWarn);WPF0001</NoWarn>

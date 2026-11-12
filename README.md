@@ -150,3 +150,13 @@ src/
 tests/
   TerminalTabConfigurator.Core.Tests/  xUnit tests
 ```
+
+## License
+
+Copyright (C) 2026 Delfim Da Costa
+
+TerminalTabConfigurator is free software: you can redistribute it and/or modify it under the terms of the [GNU General Public License](LICENSE) as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+In short: you may use, study, modify and redistribute this software, provided that you keep the author's name and the license, and that any modified version you distribute is published under the same license with its source code.
+
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the [LICENSE](LICENSE) file for details.

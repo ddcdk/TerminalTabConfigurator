@@ -2,12 +2,13 @@
 
 All notable changes to this project are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
-## [0.1] - 2026-11-11
+## [0.1] - 2026-11-12
 
 First public version.
 
 ### Added
 
+- Project released under the **GNU General Public License v3.0 or later** (`LICENSE` file), copyright Delfim Da Costa. Copyright and SPDX license headers in every source file, license and author in the assembly metadata.
 - **Visual editor** for a Windows Terminal tab split into panes: split vertically or horizontally (toolbar, pane buttons, right-click), delete, equalize, resize by dragging the dividers (the split percentage is shown on each divider).
 - **Starting templates**: single pane, 2 columns, 2 rows, 1 + 2 on the right, 2 on the left + 1, 1 on top + 2 below, 3 columns, 2 × 2 grid.
 - **Pane settings**: title (the first pane included), Windows Terminal profile, command line, starting directory, size, focus when the tab opens.
