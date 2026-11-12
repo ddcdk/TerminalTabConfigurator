@@ -71,9 +71,17 @@
                     <CheckBox x:Name="MenuCheck" Margin="0,12,0,0" Checked="OnOptionChanged" Unchecked="OnOptionChanged">
                         <StackPanel>
                             <TextBlock Text="{l:Tr NewTabMenu}" />
-                            <TextBlock Style="{StaticResource Hint}" Margin="0,2,0,0" Text="{l:Tr NewTabMenuHint}" />
+                            <TextBlock x:Name="MenuHint" Style="{StaticResource Hint}" Margin="0,2,0,0" />
                         </StackPanel>
                     </CheckBox>
+
+                    <CheckBox x:Name="ProfileCheck" Margin="0,12,0,0" Checked="OnOptionChanged" Unchecked="OnOptionChanged">
+                        <StackPanel>
+                            <TextBlock Text="{l:Tr AlsoProfile}" />
+                            <TextBlock x:Name="ProfileHint" Style="{StaticResource Hint}" Margin="0,2,0,0" />
+                        </StackPanel>
+                    </CheckBox>
+                    <TextBlock x:Name="ProfileWarning" Margin="28,4,0,0" FontSize="12" Foreground="{DynamicResource WarningIconBrush}" TextWrapping="Wrap" Visibility="Collapsed" />
 
                     <CheckBox x:Name="ShortcutCheck" Margin="0,12,0,0">
                         <StackPanel>

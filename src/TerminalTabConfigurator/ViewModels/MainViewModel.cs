@@ -9,6 +9,7 @@ using System.IO;
 using System.Windows.Input;
 using TerminalTabConfigurator.Core.Generation;
 using TerminalTabConfigurator.Core.Model;
+using TerminalTabConfigurator.Core.Parsing;
 using TerminalTabConfigurator.Core.Settings;
 using TerminalTabConfigurator.Localization;
 using TerminalTabConfigurator.Mvvm;
@@ -33,6 +34,7 @@ public sealed class MainViewModel : ObservableObject
         _ui = ui;
 
         NewLayoutCommand = new RelayCommand(NewLayout, () => _installation is not null);
+        ImportCommand = new RelayCommand(ShowImportMenu, () => _installation is not null);
         ReloadCommand = new RelayCommand(() => Reload(confirm: true), () => _installation is not null);
         SplitVerticalCommand = new RelayCommand(() => Split(SplitOrientation.Vertical), () => SelectedPane is not null);
         SplitHorizontalCommand = new RelayCommand(() => Split(SplitOrientation.Horizontal), () => SelectedPane is not null);
@@ -158,6 +160,7 @@ public sealed class MainViewModel : ObservableObject
     public bool HasUnsavedChanges => Layouts.Any(e => e.IsDirty);
 
     public ICommand NewLayoutCommand { get; }
+    public ICommand ImportCommand { get; }
     public ICommand ReloadCommand { get; }
     public ICommand SplitVerticalCommand { get; }
     public ICommand SplitHorizontalCommand { get; }
@@ -210,7 +213,8 @@ public sealed class MainViewModel : ObservableObject
         var profiles = doc.GetProfiles();
         ProfileCatalog.Profiles = profiles;
         Profiles.Add(new ProfileOption(null, string.Empty));
-        foreach (var p in profiles) Profiles.Add(new ProfileOption(ProfileCatalog.Label(p), p.Reference, p.Hidden));
+        // Profiles that open a layout (wt.exe) cannot run inside a pane: they are not offered.
+        foreach (var p in profiles.Where(p => !p.IsLayout)) Profiles.Add(new ProfileOption(ProfileCatalog.Label(p), p.Reference, p.Hidden));
 
         _defaultProfile = doc.DefaultProfile;
 
@@ -222,6 +226,7 @@ public sealed class MainViewModel : ObservableObject
                 Keys = published.Keys,
                 InNewTabMenu = published.InNewTabMenu,
                 HasShortcut = ShortcutService.Exists(published.Name),
+                HasProfile = published.HasProfile,
                 PublishedName = published.Name,
             });
         }
@@ -267,6 +272,47 @@ public sealed class MainViewModel : ObservableObject
         Layouts.Add(entry);
         SelectedEntry = entry;
         SetStatus(() => Loc.T("LayoutCreated"));
+    }
+
+    private void ShowImportMenu()
+    {
+        if (_installation is null) return;
+
+        // Read the file again: the profile may have been added since the last reload.
+        IReadOnlyList<TerminalProfile> profiles;
+        try
+        {
+            profiles = TerminalSettingsDocument.Load(_installation.SettingsPath).GetImportableProfiles();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException or InvalidDataException)
+        {
+            _ui.ShowError(Loc.T("ReadErrorTitle"), Loc.F("ReadErrorMessage", _installation.SettingsPath, ex.Message));
+            return;
+        }
+
+        _ui.ShowImportMenu(profiles, ImportProfile);
+    }
+
+    private void ImportProfile(TerminalProfile profile)
+    {
+        TabLayout layout;
+        try
+        {
+            layout = WtCommandLineParser.Parse(profile.Name, profile.Commandline ?? string.Empty);
+        }
+        catch (Exception ex) when (ex is LayoutParseException or InvalidOperationException or FormatException)
+        {
+            var reason = ex is LayoutParseException parse ? Loc.ParseError(parse) : ex.Message;
+            _ui.ShowError(Loc.T("ImportFailedTitle"), Loc.F("ImportFailedMessage", profile.Name, reason));
+            return;
+        }
+
+        layout.Icon = profile.Icon;
+        var entry = new LayoutEntry(layout, layout.Name) { IsDirty = true };
+        Layouts.Add(entry);
+        SelectedEntry = entry;
+        var name = profile.Name;
+        SetStatus(() => Loc.F("ProfileImported", name));
     }
 
     private void Split(SplitOrientation orientation)
@@ -333,7 +379,8 @@ public sealed class MainViewModel : ObservableObject
     private void Publish()
     {
         if (SelectedEntry is not { Layout: { } layout } entry || _installation is null) return;
-        if (string.IsNullOrWhiteSpace(layout.Name))
+        layout.TrimText();
+        if (layout.Name.Length == 0)
         {
             _ui.ShowError(Loc.T("MissingNameTitle"), Loc.T("MissingNameMessage"));
             return;
@@ -366,6 +413,7 @@ public sealed class MainViewModel : ObservableObject
             entry.Keys = request.Options.Keys;
             entry.InNewTabMenu = request.Options.AddToNewTabMenu;
             entry.HasShortcut = request.CreateShortcut;
+            entry.HasProfile = request.Options.CreateProfile;
             entry.RaiseActionId();
 
             var name = layout.Name;
@@ -392,12 +440,19 @@ public sealed class MainViewModel : ObservableObject
         }
 
         if (_installation is null || entry.ActionId is null) return;
-        var extra = entry.HasShortcut ? Loc.T("RemoveShortcutToo") : string.Empty;
+        var extra = (entry.HasShortcut ? Loc.T("RemoveShortcutToo") : string.Empty)
+                    + (entry.HasProfile ? Loc.T("RemoveProfileToo") : string.Empty);
         if (!_ui.Confirm(Loc.T("RemoveTitle"), Loc.F("RemoveMessage", entry.Name, extra))) return;
 
         try
         {
             var doc = TerminalSettingsDocument.Load(_installation.SettingsPath);
+            if (doc.IsLayoutProfileDefault(entry.ActionId))
+            {
+                _ui.ShowError(Loc.T("RemoveFailedTitle"), Loc.F("RemoveDefaultProfile", entry.Name));
+                return;
+            }
+
             doc.Remove(entry.ActionId);
             var backup = doc.Save(backup: true);
             if (entry.HasShortcut) ShortcutService.Delete(entry.PublishedName ?? entry.Name);

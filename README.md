@@ -52,9 +52,23 @@ dotnet test
 2. Click a pane to select it, split or delete it, and drag the splitters to adjust sizes.
 3. Fill in the properties of the selected pane and of the tab in the right-hand panel.
 4. **Test** to check the result in Windows Terminal.
-5. **Add to Windows Terminal…**: choose where to add it (palette, keyboard shortcut, "New tab" menu, desktop shortcut), review the JSON, then publish.
+5. **Add to Windows Terminal…**: choose where to add it (palette, keyboard shortcut, "New tab" menu, profile, desktop shortcut), review the JSON, then publish.
 
 Windows Terminal reloads `settings.json` on its own, so the layout is available immediately. To change it later, select it under **My layouts**, edit it, then publish again: the existing entry is updated. **Remove / delete** removes it from `settings.json`.
+
+### Also creating a profile
+
+An action cannot be Windows Terminal's default profile, nor be started with `wt -p`. The **Also create a profile** option adds a profile named after the layout, whose command line is the equivalent `wt.exe -w 0 nt … ; sp … ; fp …` command:
+
+- with **"New tab" menu** checked, the menu shows the profile instead of the action, so the layout appears only once;
+- with the menu cleared, the profile is hidden (`"hidden": true`): it no longer appears in the menu but can still be started with `wt -p "<name>"`;
+- in both cases the action stays in the command palette and keeps its keyboard shortcut.
+
+The profile is updated on each publication (name, command line, icon); settings added to it by hand in Windows Terminal (colors, font…) are kept. It is removed when the option is cleared or the layout is removed, unless it is the default profile: pick another default profile first. Profiles that open a layout are not offered in the pane profile list.
+
+### Importing a profile
+
+A profile whose command line starts `wt.exe` (for example `wt.exe -w 0 nt -p … ; sp -V -s 0.4 … ; fp -t 0`, such as the generated command pasted into a profile) can be turned back into a layout: **Import** lists those profiles, and picking one creates a new, unpublished layout with its panes, titles, folders, sizes, tab color and icon. The profile itself is not changed; once the layout is published (with **Also create a profile** if you need one), you can delete the original profile in Windows Terminal. Profiles created by the tool are not listed.
 
 ### Language and theme
 

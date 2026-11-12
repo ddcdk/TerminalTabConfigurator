@@ -38,6 +38,9 @@ public interface IUserInteraction
 
     NewLayoutRequest? AskNewLayout(IReadOnlyList<ProfileOption> profiles, string? defaultProfile);
 
+    /// <summary>Shows the profiles that open a layout; <paramref name="import"/> is called with the one picked.</summary>
+    void ShowImportMenu(IReadOnlyList<TerminalProfile> profiles, Action<TerminalProfile> import);
+
     PublishRequest? AskPublish(LayoutEntry entry, TerminalInstallation installation, TerminalSettingsDocument currentSettings, bool elevated);
 
     void CopyToClipboard(string text);

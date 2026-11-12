@@ -20,6 +20,7 @@ public sealed class LayoutEntry : ObservableObject
     private string? _keys;
     private bool _inNewTabMenu;
     private bool _hasShortcut;
+    private bool _hasProfile;
 
     private readonly LayoutParseException? _error;
 
@@ -61,6 +62,9 @@ public sealed class LayoutEntry : ObservableObject
     public bool InNewTabMenu { get => _inNewTabMenu; set => Set(ref _inNewTabMenu, value); }
 
     public bool HasShortcut { get => _hasShortcut; set => Set(ref _hasShortcut, value); }
+
+    /// <summary>A profile that opens the layout was published with it.</summary>
+    public bool HasProfile { get => _hasProfile; set => Set(ref _hasProfile, value); }
 
     /// <summary>Name under which it was last published (the desktop shortcut is named after it).</summary>
     public string? PublishedName { get; set; }

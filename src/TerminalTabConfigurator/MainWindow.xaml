@@ -168,6 +168,13 @@
                             <TextBlock Text="{l:Tr New}" />
                         </StackPanel>
                     </Button>
+                    <Button x:Name="ImportButton" Style="{StaticResource ToolbarButton}" Command="{Binding ImportCommand}" ToolTip="{l:Tr ImportTooltip}"
+                            AutomationProperties.Name="{l:Tr Import}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,6,0" Text="&#xE8B5;" />
+                            <TextBlock Text="{l:Tr Import}" />
+                        </StackPanel>
+                    </Button>
                     <Button Style="{StaticResource ToolbarButton}" Command="{Binding ReloadCommand}" ToolTip="{l:Tr ReloadTooltip}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Style="{StaticResource GlyphIcon}" FontSize="13" Margin="0,0,6,0" Text="&#xE72C;" />
@@ -269,7 +276,6 @@
                             </TextBlock>
                         </StackPanel>
                     </Border>
-                    <TextBlock Text="{l:Tr TabPreview}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" VerticalAlignment="Bottom" Margin="10,0,0,8" />
                 </DockPanel>
 
                 <Border DockPanel.Dock="Top" Margin="0,12,0,0" Padding="12,8" CornerRadius="6"
@@ -459,6 +465,8 @@
                                        Visibility="{Binding SelectedEntry.InNewTabMenu, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                             <TextBlock Style="{StaticResource Hint}" Text="{l:Tr HasDesktopShortcut}"
                                        Visibility="{Binding SelectedEntry.HasShortcut, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
+                            <TextBlock Style="{StaticResource Hint}" Text="{l:Tr HasLayoutProfile}"
+                                       Visibility="{Binding SelectedEntry.HasProfile, Converter={StaticResource BoolToVisibility}, FallbackValue=Collapsed}" />
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>

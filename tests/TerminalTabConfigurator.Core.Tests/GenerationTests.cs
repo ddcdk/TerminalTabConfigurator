@@ -145,6 +145,46 @@ public class GenerationTests
     }
 
     [Fact]
+    public void Text_fields_keep_a_trailing_space_while_typing()
+    {
+        // WPF reads the value back after each keystroke: a trimming setter would swallow the space.
+        var pane = new PaneLeaf { Commandline = "pwsh ", Title = "Mon ", StartingDirectory = @"C:\Program " };
+        var layout = new TabLayout("x", pane) { Name = "Dev ", TabTitle = "Mon " };
+
+        Assert.Equal("pwsh ", pane.Commandline);
+        Assert.Equal("Mon ", pane.Title);
+        Assert.Equal(@"C:\Program ", pane.StartingDirectory);
+        Assert.Equal("Dev ", layout.Name);
+        Assert.Equal("Mon ", layout.TabTitle);
+        Assert.Null(new PaneLeaf { Commandline = "   " }.Commandline);
+    }
+
+    [Fact]
+    public void Generated_commands_and_published_layouts_are_trimmed()
+    {
+        var pane = new PaneLeaf { Commandline = " pwsh -NoExit c:\\monscript.ps1 ", Title = " Logs ", StartingDirectory = " C:\\Dev " };
+        var layout = new TabLayout(" Dev web ", pane) { TabTitle = " Web ", TabColor = " #C18FFF " };
+
+        Assert.Equal("-w 0 nt --tabColor #C18FFF --title Logs -d C:\\Dev pwsh -NoExit c:\\monscript.ps1",
+            WtCommandLineBuilder.BuildArguments(layout));
+
+        var actions = JsonActionBuilder.BuildCommand(layout)["actions"]!.AsArray();
+        Assert.Equal("pwsh -NoExit c:\\monscript.ps1", (string?)actions[0]!["commandline"]);
+        Assert.Equal("Logs", (string?)actions[0]!["tabTitle"]);
+        Assert.Equal("C:\\Dev", (string?)actions[0]!["startingDirectory"]);
+        Assert.Equal("#C18FFF", (string?)actions[0]!["tabColor"]);
+        Assert.Equal("Web", (string?)actions[^1]!["title"]);
+
+        layout.TrimText();
+        Assert.Equal("Dev web", layout.Name);
+        Assert.Equal("Web", layout.TabTitle);
+        Assert.Equal("#C18FFF", layout.TabColor);
+        Assert.Equal("pwsh -NoExit c:\\monscript.ps1", pane.Commandline);
+        Assert.Equal("Logs", pane.Title);
+        Assert.Equal("C:\\Dev", pane.StartingDirectory);
+    }
+
+    [Fact]
     public void Split_remove_and_equalize_keep_tree_consistent()
     {
         var first = new PaneLeaf();

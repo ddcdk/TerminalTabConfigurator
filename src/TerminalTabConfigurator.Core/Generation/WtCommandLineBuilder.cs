@@ -27,9 +27,9 @@ public static class WtCommandLineBuilder
             {
                 case NewTabStep s:
                     sb.Append("nt");
-                    if (layout.TabColor is not null) sb.Append(" --tabColor ").Append(Quote(layout.TabColor));
+                    if (TextValue.Clean(layout.TabColor) is { } color) sb.Append(" --tabColor ").Append(Quote(color));
                     // The command line has no renameTab: untitled panes carry the tab title instead.
-                    AppendPaneArgs(sb, s.Pane, s.Pane.Title ?? layout.TabTitle);
+                    AppendPaneArgs(sb, s.Pane, layout);
                     break;
 
                 case SplitPaneStep s:
@@ -37,7 +37,7 @@ public static class WtCommandLineBuilder
                       .Append(s.Orientation == SplitOrientation.Vertical ? "-V" : "-H")
                       .Append(" -s ")
                       .Append(JsonActionBuilder.FormatSize(s.Size));
-                    AppendPaneArgs(sb, s.Pane, s.Pane.Title ?? layout.TabTitle);
+                    AppendPaneArgs(sb, s.Pane, layout);
                     break;
 
                 case FocusPaneStep s:
@@ -53,12 +53,13 @@ public static class WtCommandLineBuilder
 
     public static string BuildDisplay(TabLayout layout) => "wt.exe " + BuildArguments(layout);
 
-    private static void AppendPaneArgs(StringBuilder sb, PaneLeaf pane, string? title)
+    private static void AppendPaneArgs(StringBuilder sb, PaneLeaf pane, TabLayout layout)
     {
+        var title = TextValue.Clean(pane.Title) ?? TextValue.Clean(layout.TabTitle);
         if (pane.Profile is not null) sb.Append(" -p ").Append(Quote(pane.Profile));
         if (title is not null) sb.Append(" --title ").Append(Quote(EscapeSemicolons(title)));
-        if (pane.StartingDirectory is not null) sb.Append(" -d ").Append(Quote(pane.StartingDirectory));
-        if (pane.Commandline is not null) sb.Append(' ').Append(EscapeSemicolons(pane.Commandline));
+        if (TextValue.Clean(pane.StartingDirectory) is { } directory) sb.Append(" -d ").Append(Quote(directory));
+        if (TextValue.Clean(pane.Commandline) is { } commandline) sb.Append(' ').Append(EscapeSemicolons(commandline));
     }
 
     /// <summary>wt.exe uses <c>;</c> to separate commands; a literal one must be written <c>\;</c>.</summary>

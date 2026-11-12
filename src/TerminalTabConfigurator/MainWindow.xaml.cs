@@ -107,6 +107,36 @@ public partial class MainWindow : Window, IUserInteraction
         return dialog.ShowDialog() == true ? dialog.Result : null;
     }
 
+    public void ShowImportMenu(IReadOnlyList<TerminalProfile> profiles, Action<TerminalProfile> import)
+    {
+        var menu = new ContextMenu
+        {
+            PlacementTarget = ImportButton,
+            Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom,
+        };
+
+        if (profiles.Count == 0)
+        {
+            menu.Items.Add(new MenuItem { Header = Loc.T("NoProfileToImport"), IsEnabled = false });
+        }
+        else
+        {
+            menu.Items.Add(new MenuItem { Header = Loc.T("ImportFromProfile"), IsEnabled = false });
+            foreach (var profile in profiles)
+            {
+                var item = new MenuItem
+                {
+                    Header = profile.Hidden ? $"{profile.Name} ({Loc.T("Hidden")})" : profile.Name,
+                    ToolTip = profile.Commandline,
+                };
+                item.Click += (_, _) => import(profile);
+                menu.Items.Add(item);
+            }
+        }
+
+        menu.IsOpen = true;
+    }
+
     public PublishRequest? AskPublish(LayoutEntry entry, TerminalInstallation installation, TerminalSettingsDocument currentSettings, bool elevated)
     {
         var dialog = new PublishWindow(entry, installation, currentSettings, elevated) { Owner = this };

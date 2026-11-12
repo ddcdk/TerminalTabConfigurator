@@ -15,8 +15,11 @@ using TerminalTabConfigurator.Core.Parsing;
 namespace TerminalTabConfigurator.Core.Settings;
 
 /// <param name="Elevate">The profile runs as administrator (<c>"elevate": true</c>, possibly inherited from <c>profiles.defaults</c>).</param>
-public sealed record TerminalProfile(string Name, string? Guid, string? Commandline, bool Hidden, bool Elevate = false)
+public sealed record TerminalProfile(string Name, string? Guid, string? Commandline, bool Hidden, bool Elevate = false, string? Icon = null)
 {
+    /// <summary>The profile only starts <c>wt.exe</c>: it opens a layout that can be imported (see <see cref="WtCommandLineParser"/>).</summary>
+    public bool IsLayout => WtCommandLineParser.IsWtCommand(Commandline);
+
     /// <summary>Value written in <c>"profile"</c>: the GUID when known (survives a rename), else the name.</summary>
     public string Reference => Guid ?? Name;
 
@@ -27,9 +30,12 @@ public sealed record TerminalProfile(string Name, string? Guid, string? Commandl
 }
 
 /// <summary>A layout found in settings.json. <see cref="Layout"/> is null when it could not be read back (see <see cref="Error"/>).</summary>
-public sealed record PublishedLayout(string ActionId, string Name, TabLayout? Layout, LayoutParseException? Error, string? Keys, bool InNewTabMenu);
+/// <param name="HasProfile">A profile that opens the layout was published with it (see <see cref="TerminalSettingsDocument.LayoutProfileGuid"/>).</param>
+public sealed record PublishedLayout(string ActionId, string Name, TabLayout? Layout, LayoutParseException? Error, string? Keys, bool InNewTabMenu, bool HasProfile = false);
 
-public sealed record PublishOptions(string? Keys, bool AddToNewTabMenu);
+/// <param name="AddToNewTabMenu">Show the layout in the "New tab" menu: the action, or the profile when there is one.</param>
+/// <param name="CreateProfile">Also publish a profile whose command line opens the layout (usable as default profile, with <c>wt -p</c>, in the jump list).</param>
+public sealed record PublishOptions(string? Keys, bool AddToNewTabMenu, bool CreateProfile = false);
 
 /// <summary>
 /// Reads and edits a Windows Terminal settings.json. Comments and trailing commas are accepted on
@@ -38,6 +44,9 @@ public sealed record PublishOptions(string? Keys, bool AddToNewTabMenu);
 public sealed partial class TerminalSettingsDocument
 {
     public const string ActionIdPrefix = "User.TTC.";
+
+    /// <summary>Namespace of the name-based GUIDs of layout profiles (see <see cref="LayoutProfileGuid"/>).</summary>
+    private static readonly Guid LayoutProfileNamespace = new("5b0d3f6e-6c1a-4f0e-9a43-7d2f1c8e4b21");
 
     private static readonly JsonDocumentOptions ReadOptions = new()
     {
@@ -75,12 +84,7 @@ public sealed partial class TerminalSettingsDocument
 
     public IReadOnlyList<TerminalProfile> GetProfiles()
     {
-        var list = Root["profiles"] switch
-        {
-            JsonObject o => o["list"] as JsonArray,
-            JsonArray a => a,
-            _ => null,
-        };
+        var list = ProfileList;
         var defaultElevate = Root["profiles"] is JsonObject profiles && profiles["defaults"] is JsonObject defaults
                              && Bool(defaults, "elevate") == true;
 
@@ -90,7 +94,8 @@ public sealed partial class TerminalSettingsDocument
                        Str(p, "guid"),
                        Str(p, "commandline"),
                        Bool(p, "hidden") == true,
-                       Bool(p, "elevate") ?? defaultElevate))
+                       Bool(p, "elevate") ?? defaultElevate,
+                       Str(p, "icon")))
                    .ToList()
                ?? [];
     }
@@ -122,10 +127,28 @@ public sealed partial class TerminalSettingsDocument
                 error = ex as LayoutParseException ?? new LayoutParseException(LayoutParseError.Invalid, ex.Message);
             }
 
-            result.Add(new PublishedLayout(id, name, layout, error, GetKeys(id), IsInNewTabMenu(id)));
+            // With a profile, the menu shows the profile (it is hidden when it should not appear).
+            var profile = FindProfile(LayoutProfileGuid(id));
+            var inMenu = profile is null ? IsInNewTabMenu(id) : Bool(profile, "hidden") != true;
+            result.Add(new PublishedLayout(id, name, layout, error, GetKeys(id), inMenu, profile is not null));
         }
 
         return result;
+    }
+
+    /// <summary>Profiles that open a layout with <c>wt.exe</c> and were not published by this tool: they can be imported.</summary>
+    public IReadOnlyList<TerminalProfile> GetImportableProfiles()
+    {
+        var published = LayoutActionIds().Select(LayoutProfileGuid).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        return [.. GetProfiles().Where(p => p.IsLayout && (p.Guid is null || !published.Contains(p.Guid)))];
+    }
+
+    /// <summary>True when the profile published with the layout is Windows Terminal's default profile (it must not be removed).</summary>
+    public bool IsLayoutProfileDefault(string actionId)
+    {
+        if (DefaultProfile is not { } reference || FindProfile(LayoutProfileGuid(actionId)) is not { } profile) return false;
+        return string.Equals(reference, Str(profile, "guid"), StringComparison.OrdinalIgnoreCase)
+               || string.Equals(reference, Str(profile, "name"), StringComparison.OrdinalIgnoreCase);
     }
 
     public string? GetKeys(string actionId)
@@ -195,8 +218,53 @@ public sealed partial class TerminalSettingsDocument
         if (!string.IsNullOrWhiteSpace(options.Keys))
             EnsureArray("keybindings").Add(new JsonObject { ["id"] = id, ["keys"] = options.Keys.Trim() });
 
-        if (options.AddToNewTabMenu) AddToNewTabMenu(id);
-        else RemoveFromNewTabMenu(id);
+        // The "New tab" menu shows the profile or the action, never both. A profile left out of
+        // the menu is hidden, otherwise "remainingProfiles" would list it anyway.
+        var guid = LayoutProfileGuid(id);
+        if (options.CreateProfile)
+        {
+            UpsertProfile(BuildLayoutProfile(layout, id, hidden: !options.AddToNewTabMenu));
+            RemoveFromNewTabMenu(e => IsActionEntry(e, id));
+            if (options.AddToNewTabMenu) AddToNewTabMenu(new JsonObject { ["type"] = "profile", ["profile"] = guid }, e => IsProfileEntry(e, guid));
+            else RemoveFromNewTabMenu(e => IsProfileEntry(e, guid));
+        }
+        else
+        {
+            RemoveLayoutProfile(guid);
+            if (options.AddToNewTabMenu) AddToNewTabMenu(new JsonObject { ["type"] = "action", ["id"] = id }, e => IsActionEntry(e, id));
+            else RemoveFromNewTabMenu(e => IsActionEntry(e, id));
+        }
+    }
+
+    /// <summary>
+    /// GUID of the profile published with a layout: a name-based UUID (version 5) of the action id,
+    /// so the profile is found again from the action without storing anything else.
+    /// </summary>
+    public static string LayoutProfileGuid(string actionId)
+    {
+        var name = Encoding.UTF8.GetBytes(actionId);
+        var data = new byte[16 + name.Length];
+        LayoutProfileNamespace.TryWriteBytes(data, bigEndian: true, out _);
+        name.CopyTo(data, 16);
+
+        var hash = System.Security.Cryptography.SHA1.HashData(data);
+        hash[6] = (byte)((hash[6] & 0x0F) | 0x50); // version 5
+        hash[8] = (byte)((hash[8] & 0x3F) | 0x80); // RFC 4122 variant
+        return new Guid(hash.AsSpan(0, 16), bigEndian: true).ToString("B");
+    }
+
+    /// <summary>The profile published with a layout: its command line is the equivalent <c>wt.exe</c> command.</summary>
+    public static JsonObject BuildLayoutProfile(TabLayout layout, string actionId, bool hidden)
+    {
+        var profile = new JsonObject
+        {
+            ["guid"] = LayoutProfileGuid(actionId),
+            ["name"] = layout.Name,
+            ["commandline"] = WtCommandLineBuilder.BuildDisplay(layout),
+        };
+        if (TextValue.Clean(layout.Icon) is { } icon) profile["icon"] = icon;
+        profile["hidden"] = hidden;
+        return profile;
     }
 
     /// <summary>Removes the action and everything that points to it.</summary>
@@ -209,7 +277,8 @@ public sealed partial class TerminalSettingsDocument
         }
 
         RemoveKeyBindings(actionId);
-        RemoveFromNewTabMenu(actionId);
+        RemoveFromNewTabMenu(e => IsActionEntry(e, actionId));
+        RemoveLayoutProfile(LayoutProfileGuid(actionId));
     }
 
     public string GenerateActionId(string name)
@@ -298,7 +367,65 @@ public sealed partial class TerminalSettingsDocument
             bindings.Remove(b);
     }
 
-    private void AddToNewTabMenu(string actionId)
+    private JsonArray? ProfileList => Root["profiles"] switch
+    {
+        JsonObject o => o["list"] as JsonArray,
+        JsonArray a => a,
+        _ => null,
+    };
+
+    private JsonArray EnsureProfileList()
+    {
+        switch (Root["profiles"])
+        {
+            case JsonArray array:
+                return array;
+            case JsonObject profiles:
+                if (profiles["list"] is JsonArray list) return list;
+                var created = new JsonArray();
+                profiles["list"] = created;
+                return created;
+            default:
+                var newList = new JsonArray();
+                Root["profiles"] = new JsonObject { ["defaults"] = new JsonObject(), ["list"] = newList };
+                return newList;
+        }
+    }
+
+    private JsonObject? FindProfile(string guid) =>
+        ProfileList?.OfType<JsonObject>().FirstOrDefault(p => string.Equals(Str(p, "guid"), guid, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>Adds the profile, or updates the keys this tool writes and keeps the others (colors, font…).</summary>
+    private void UpsertProfile(JsonObject profile)
+    {
+        var existing = FindProfile(Str(profile, "guid")!);
+        if (existing is null)
+        {
+            EnsureProfileList().Add(profile);
+            return;
+        }
+
+        foreach (var key in new[] { "name", "commandline", "icon", "hidden" })
+        {
+            if (profile[key] is { } value) existing[key] = value.DeepClone();
+            else existing.Remove(key);
+        }
+    }
+
+    private void RemoveLayoutProfile(string guid)
+    {
+        if (FindProfile(guid) is { } profile) ProfileList!.Remove(profile);
+        RemoveFromNewTabMenu(e => IsProfileEntry(e, guid));
+    }
+
+    private IEnumerable<string> LayoutActionIds() =>
+        (Root["actions"] as JsonArray)?.OfType<JsonObject>()
+            .Select(a => Str(a, "id"))
+            .Where(id => id?.StartsWith(ActionIdPrefix, StringComparison.Ordinal) == true)
+            .Select(id => id!)
+        ?? [];
+
+    private void AddToNewTabMenu(JsonObject entry, Func<JsonObject, bool> isSameEntry)
     {
         JsonArray menu;
         if (Root["newTabMenu"] is null)
@@ -312,18 +439,18 @@ public sealed partial class TerminalSettingsDocument
             menu = EnsureArray("newTabMenu");
         }
 
-        if (MenuEntries(menu).Any(e => IsActionEntry(e, actionId))) return;
+        if (MenuEntries(menu).Any(isSameEntry)) return;
 
-        // Keep our entries grouped at the top, in publication order.
+        // Keep our entries (actions and layout profiles) grouped at the top, in publication order.
+        var ownProfiles = LayoutActionIds().Select(LayoutProfileGuid).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var index = 0;
-        while (index < menu.Count && menu[index] is JsonObject e && Str(e, "type") == "action" &&
-               Str(e, "id")?.StartsWith(ActionIdPrefix, StringComparison.Ordinal) == true)
+        while (index < menu.Count && menu[index] is JsonObject e && IsOwnEntry(e, ownProfiles))
             index++;
 
-        menu.Insert(index, new JsonObject { ["type"] = "action", ["id"] = actionId });
+        menu.Insert(index, entry);
     }
 
-    private void RemoveFromNewTabMenu(string actionId)
+    private void RemoveFromNewTabMenu(Func<JsonObject, bool> match)
     {
         if (Root["newTabMenu"] is JsonArray menu) RemoveFrom(menu);
 
@@ -331,11 +458,21 @@ public sealed partial class TerminalSettingsDocument
         {
             foreach (var e in entries.OfType<JsonObject>().ToList())
             {
-                if (IsActionEntry(e, actionId)) entries.Remove(e);
+                if (match(e)) entries.Remove(e);
                 else if (e["entries"] is JsonArray children) RemoveFrom(children);
             }
         }
     }
+
+    private static bool IsOwnEntry(JsonObject entry, HashSet<string> ownProfiles) => Str(entry, "type") switch
+    {
+        "action" => Str(entry, "id")?.StartsWith(ActionIdPrefix, StringComparison.Ordinal) == true,
+        "profile" => Str(entry, "profile") is { } profile && ownProfiles.Contains(profile),
+        _ => false,
+    };
+
+    private static bool IsProfileEntry(JsonObject entry, string guid) =>
+        Str(entry, "type") == "profile" && string.Equals(Str(entry, "profile"), guid, StringComparison.OrdinalIgnoreCase);
 
     private static IEnumerable<JsonObject> MenuEntries(JsonArray entries)
     {

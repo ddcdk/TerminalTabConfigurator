@@ -60,3 +60,5 @@ helm/values-*.yaml
 
 # Archives downloaded by restore.ps1 (personal data)
 backups/
+
+capture*.png

@@ -21,8 +21,8 @@ public static class JsonActionBuilder
             {
                 case NewTabStep s:
                     var newTab = new JsonObject { ["action"] = "newTab" };
-                    AddPaneArgs(newTab, s.Pane, s.Pane.Title);
-                    if (layout.TabColor is not null) newTab["tabColor"] = layout.TabColor;
+                    AddPaneArgs(newTab, s.Pane);
+                    if (TextValue.Clean(layout.TabColor) is { } color) newTab["tabColor"] = color;
                     actions.Add(newTab);
                     break;
 
@@ -33,7 +33,7 @@ public static class JsonActionBuilder
                         ["split"] = s.Orientation == SplitOrientation.Vertical ? "right" : "down",
                         ["size"] = JsonValue.Create(s.Size),
                     };
-                    AddPaneArgs(split, s.Pane, s.Pane.Title);
+                    AddPaneArgs(split, s.Pane);
                     actions.Add(split);
                     break;
 
@@ -45,8 +45,8 @@ public static class JsonActionBuilder
 
         // In Windows Terminal a pane title ("tabTitle") becomes the tab title while that pane is
         // focused. renameTab sets a tab-level title instead, so the first pane keeps its own.
-        if (layout.TabTitle is not null)
-            actions.Add(new JsonObject { ["action"] = "renameTab", ["title"] = layout.TabTitle });
+        if (TextValue.Clean(layout.TabTitle) is { } tabTitle)
+            actions.Add(new JsonObject { ["action"] = "renameTab", ["title"] = tabTitle });
 
         return new JsonObject
         {
@@ -55,12 +55,12 @@ public static class JsonActionBuilder
         };
     }
 
-    private static void AddPaneArgs(JsonObject target, PaneLeaf pane, string? title)
+    private static void AddPaneArgs(JsonObject target, PaneLeaf pane)
     {
         if (pane.Profile is not null) target["profile"] = pane.Profile;
-        if (pane.Commandline is not null) target["commandline"] = pane.Commandline;
-        if (pane.StartingDirectory is not null) target["startingDirectory"] = pane.StartingDirectory;
-        if (title is not null) target["tabTitle"] = title;
+        if (TextValue.Clean(pane.Commandline) is { } commandline) target["commandline"] = commandline;
+        if (TextValue.Clean(pane.StartingDirectory) is { } directory) target["startingDirectory"] = directory;
+        if (TextValue.Clean(pane.Title) is { } title) target["tabTitle"] = title;
 
         foreach (var (key, value) in pane.ExtraArgs)
             if (!target.ContainsKey(key)) target[key] = value?.DeepClone();

@@ -2,6 +2,22 @@
 
 All notable changes to this project are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- **Import a profile as a layout**: the new **Import** button lists the profiles whose command line starts `wt.exe` (`wt.exe -w 0 nt … ; sp … ; fp …`) and turns the chosen one into a new, unpublished layout (panes, titles, profiles, folders, command lines, sizes, focus, tab color, icon). The profile itself is left unchanged.
+- **Also create a profile** option when publishing: a Windows Terminal profile named after the layout, whose command line is the equivalent `wt.exe` command, so the layout can be the default profile or be started with `wt -p`. It is updated on each publication and removed with the layout; settings added to it by hand (colors, font…) are kept. The "New tab" menu then shows the profile instead of the action, so the layout appears only once; when the menu option is cleared, the profile is hidden. The action stays in the command palette and keeps its keyboard shortcut. A layout whose profile is the default profile cannot be removed.
+- Profiles that open a layout (`wt.exe …`) are no longer offered in the pane profile list, and profiles created by the tool are not offered for import.
+
+### Fixed
+
+- A space typed at the end of a text field (command line, pane title, starting directory, layout name, tab title, icon) was removed immediately, so `pwsh -NoExit c:\script.ps1` could not be entered. Fields now keep the text as typed; it is trimmed when the command is generated and when the layout is published.
+
+### Removed
+
+- The "Tab preview" caption next to the previewed tab header: it looked like a second, inactive tab.
+
 ## [0.1] - 2026-11-12
 
 First public version.

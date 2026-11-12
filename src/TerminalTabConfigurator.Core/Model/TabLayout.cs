@@ -31,22 +31,35 @@ public sealed class TabLayout : INotifyPropertyChanged
     public event EventHandler<bool>? Changed;
 
     /// <summary>Action name shown in the command palette and the new tab menu.</summary>
-    public string Name { get => _name; set => Set(ref _name, value?.Trim() ?? string.Empty); }
+    public string Name { get => _name; set => Set(ref _name, value ?? string.Empty); }
 
     /// <summary>Id of the action in settings.json (<c>User.TTC.*</c>); null until published.</summary>
     public string? ActionId { get; set; }
 
     /// <summary>Tab title (written as a final <c>renameTab</c>), independent from the pane titles.</summary>
-    public string? TabTitle { get => _tabTitle; set => Set(ref _tabTitle, string.IsNullOrWhiteSpace(value) ? null : value.Trim()); }
+    public string? TabTitle { get => _tabTitle; set => Set(ref _tabTitle, TextValue.Keep(value)); }
 
     /// <summary>
     /// Icon of the action, shown in the command palette and the new tab menu: an image path,
     /// an emoji or a Segoe Fluent Icons glyph.
     /// </summary>
-    public string? Icon { get => _icon; set => Set(ref _icon, string.IsNullOrWhiteSpace(value) ? null : value.Trim()); }
+    public string? Icon { get => _icon; set => Set(ref _icon, TextValue.Keep(value)); }
 
     /// <summary>Tab color as <c>#RRGGBB</c>, or null.</summary>
-    public string? TabColor { get => _tabColor; set => Set(ref _tabColor, string.IsNullOrWhiteSpace(value) ? null : value.Trim()); }
+    public string? TabColor { get => _tabColor; set => Set(ref _tabColor, TextValue.Keep(value)); }
+
+    /// <summary>
+    /// Trims every edited text field of the layout and its panes. Fields keep the text as typed
+    /// while editing (see <see cref="TextValue"/>); call this before publishing.
+    /// </summary>
+    public void TrimText()
+    {
+        Name = Name.Trim();
+        TabTitle = TextValue.Clean(TabTitle);
+        Icon = TextValue.Clean(Icon);
+        TabColor = TextValue.Clean(TabColor);
+        foreach (var pane in Leaves()) pane.TrimText();
+    }
 
     public LayoutNode Root
     {

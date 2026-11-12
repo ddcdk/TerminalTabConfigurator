@@ -20,7 +20,10 @@ public static class LayoutParser
     private static readonly HashSet<string> NewTabKeys = [.. PaneKeys, "tabColor"];
     private static readonly HashSet<string> SplitKeys = [.. PaneKeys, "split", "size"];
 
-    public static TabLayout Parse(string name, JsonNode? command)
+    public static TabLayout Parse(string name, JsonNode? command) => Parse(name, command, legacyTitles: true);
+
+    /// <param name="legacyTitles">Without <c>renameTab</c>, read the first pane's title as the tab title (format of the first versions).</param>
+    internal static TabLayout Parse(string name, JsonNode? command, bool legacyTitles)
     {
         if (command is not JsonObject obj || Str(obj, "action") != "multipleActions" || obj["actions"] is not JsonArray actions)
             throw new LayoutParseException(LayoutParseError.NotMultipleActions);
@@ -84,7 +87,7 @@ public static class LayoutParser
         if (lastWasFocus) panes[focused].FocusOnStart = true;
 
         var tabTitle = renamedTitle;
-        if (!renamed)
+        if (!renamed && legacyTitles)
         {
             // Older format, without renameTab: the first pane's title was the tab title and
             // untitled panes repeated it.
@@ -151,6 +154,18 @@ public enum LayoutParseError
     UnsupportedAction,
     UnknownSplitDirection,
 
+    /// <summary>The command line does not start <c>wt.exe</c>.</summary>
+    NotWtCommand,
+
+    /// <summary>A <c>wt.exe</c> option the editor does not know; <see cref="LayoutParseException.Detail"/> holds it.</summary>
+    UnsupportedOption,
+
+    /// <summary>A <c>wt.exe</c> option without its value.</summary>
+    MissingOptionValue,
+
+    /// <summary>A <c>wt.exe</c> option with an invalid value.</summary>
+    InvalidOptionValue,
+
     /// <summary>Any other reading error; <see cref="LayoutParseException.Detail"/> holds its message.</summary>
     Invalid,
 }
@@ -170,6 +185,10 @@ public sealed class LayoutParseException(LayoutParseError error, string? detail 
         LayoutParseError.FocusUnknownPane => $"focusPane targets a pane that does not exist ({detail}).",
         LayoutParseError.UnsupportedAction => $"Action \"{detail}\" is not supported by the editor.",
         LayoutParseError.UnknownSplitDirection => $"Unknown split direction: \"{detail}\".",
+        LayoutParseError.NotWtCommand => "The command line does not start wt.exe.",
+        LayoutParseError.UnsupportedOption => $"Option \"{detail}\" is not supported by the editor.",
+        LayoutParseError.MissingOptionValue => $"Option \"{detail}\" has no value.",
+        LayoutParseError.InvalidOptionValue => $"Invalid value: \"{detail}\".",
         _ => detail ?? "Invalid layout.",
     };
 }

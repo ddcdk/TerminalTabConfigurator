@@ -19,14 +19,14 @@ public sealed class PaneLeaf : LayoutNode
     private bool _isSelected;
 
     /// <summary>Pane title (sent as <c>tabTitle</c>).</summary>
-    public string? Title { get => _title; set => Set(ref _title, Normalize(value)); }
+    public string? Title { get => _title; set => Set(ref _title, TextValue.Keep(value)); }
 
     /// <summary>Windows Terminal profile, by GUID or name. Null = no profile (default profile + commandline).</summary>
-    public string? Profile { get => _profile; set => Set(ref _profile, Normalize(value)); }
+    public string? Profile { get => _profile; set => Set(ref _profile, TextValue.Clean(value)); }
 
-    public string? Commandline { get => _commandline; set => Set(ref _commandline, Normalize(value)); }
+    public string? Commandline { get => _commandline; set => Set(ref _commandline, TextValue.Keep(value)); }
 
-    public string? StartingDirectory { get => _startingDirectory; set => Set(ref _startingDirectory, Normalize(value)); }
+    public string? StartingDirectory { get => _startingDirectory; set => Set(ref _startingDirectory, TextValue.Keep(value)); }
 
     /// <summary>When true, this pane gets the focus once the tab is built. Only one pane can have it.</summary>
     public bool FocusOnStart
@@ -67,5 +67,11 @@ public sealed class PaneLeaf : LayoutNode
         _startingDirectory = _startingDirectory,
     };
 
-    private static string? Normalize(string? value) => string.IsNullOrWhiteSpace(value) ? null : value.Trim();
+    /// <summary>Trims the edited text fields (see <see cref="TextValue"/>).</summary>
+    internal void TrimText()
+    {
+        Title = TextValue.Clean(Title);
+        Commandline = TextValue.Clean(Commandline);
+        StartingDirectory = TextValue.Clean(StartingDirectory);
+    }
 }

@@ -20,6 +20,7 @@ public partial class PublishWindow : Window
     private readonly TabLayout _layout;
     private readonly TerminalSettingsDocument _settings;
     private readonly string _actionId;
+    private readonly bool _profileIsDefault;
     private readonly bool _ready;
 
     public PublishWindow(LayoutEntry entry, TerminalInstallation installation, TerminalSettingsDocument currentSettings, bool elevated)
@@ -37,6 +38,8 @@ public partial class PublishWindow : Window
         KeysCheck.IsChecked = entry.Keys is not null;
         KeysBox.Text = entry.Keys ?? string.Empty;
         MenuCheck.IsChecked = !entry.IsPublished || entry.InNewTabMenu;
+        ProfileCheck.IsChecked = entry.HasProfile;
+        _profileIsDefault = entry.HasProfile && currentSettings.IsLayoutProfileDefault(_actionId);
         // For an elevated layout the desktop shortcut is the one entry point that works from anywhere.
         ShortcutCheck.IsChecked = entry.HasShortcut || (elevated && !entry.IsPublished);
         ElevationBanner.Visibility = elevated ? Visibility.Visible : Visibility.Collapsed;
@@ -76,7 +79,16 @@ public partial class PublishWindow : Window
 
         KeysWarning.Text = warning;
         KeysWarning.Visibility = warning is null ? Visibility.Collapsed : Visibility.Visible;
-        PublishButton.IsEnabled = warning is null;
+
+        // The default profile must not disappear from under Windows Terminal.
+        var profileWarning = _profileIsDefault && ProfileCheck.IsChecked != true ? Loc.T("ProfileIsDefault") : null;
+        ProfileWarning.Text = profileWarning;
+        ProfileWarning.Visibility = profileWarning is null ? Visibility.Collapsed : Visibility.Visible;
+
+        MenuHint.Text = Loc.T(ProfileCheck.IsChecked == true ? "NewTabMenuHintProfile" : "NewTabMenuHint");
+        ProfileHint.Text = Loc.F(MenuCheck.IsChecked == true ? "ProfileHintMenu" : "ProfileHintHidden", _layout.Name);
+
+        PublishButton.IsEnabled = warning is null && profileWarning is null;
         JsonPreview.Text = BuildPreview();
     }
 
@@ -90,8 +102,18 @@ public partial class PublishWindow : Window
         if (Keys is { } keys)
             preview["keybindings"] = new JsonArray(new JsonObject { ["id"] = _actionId, ["keys"] = keys });
 
-        if (MenuCheck.IsChecked == true)
+        var menu = MenuCheck.IsChecked == true;
+        if (ProfileCheck.IsChecked == true)
+        {
+            var profile = TerminalSettingsDocument.BuildLayoutProfile(_layout, _actionId, hidden: !menu);
+            preview["profiles"] = new JsonObject { ["list"] = new JsonArray(profile) };
+            if (menu)
+                preview["newTabMenu"] = new JsonArray(new JsonObject { ["type"] = "profile", ["profile"] = profile["guid"]!.DeepClone() });
+        }
+        else if (menu)
+        {
             preview["newTabMenu"] = new JsonArray(new JsonObject { ["type"] = "action", ["id"] = _actionId });
+        }
 
         return TerminalSettingsDocument.Format(preview);
     }
@@ -102,7 +124,7 @@ public partial class PublishWindow : Window
         if (!PublishButton.IsEnabled) return;
 
         Result = new PublishRequest(
-            new PublishOptions(Keys, MenuCheck.IsChecked == true),
+            new PublishOptions(Keys, MenuCheck.IsChecked == true, ProfileCheck.IsChecked == true),
             ShortcutCheck.IsChecked == true,
             BackupCheck.IsChecked == true);
         DialogResult = true;

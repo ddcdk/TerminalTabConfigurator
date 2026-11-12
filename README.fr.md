@@ -52,9 +52,23 @@ dotnet test
 2. Cliquez un volet pour le sélectionner, divisez-le ou supprimez-le, et glissez les séparateurs pour ajuster les tailles.
 3. Renseignez les propriétés du volet sélectionné et de l'onglet dans le panneau de droite.
 4. **Tester** pour vérifier le rendu dans Windows Terminal.
-5. **Ajouter à Windows Terminal…** : choisissez où l'ajouter (palette, raccourci clavier, menu « Nouvel onglet », raccourci Bureau), vérifiez le JSON, puis publiez.
+5. **Ajouter à Windows Terminal…** : choisissez où l'ajouter (palette, raccourci clavier, menu « Nouvel onglet », profil, raccourci Bureau), vérifiez le JSON, puis publiez.
 
 Windows Terminal recharge `settings.json` tout seul : la disposition est disponible immédiatement. Pour la modifier plus tard, sélectionnez-la dans **Mes dispositions**, changez-la, puis publiez à nouveau (l'entrée existante est mise à jour). **Retirer / supprimer** l'enlève de `settings.json`.
+
+### Créer aussi un profil
+
+Une action ne peut pas être le profil par défaut de Windows Terminal, ni être lancée avec `wt -p`. L'option **Créer aussi un profil** ajoute un profil du nom de la disposition, dont la ligne de commande est la commande `wt.exe -w 0 nt … ; sp … ; fp …` équivalente :
+
+- avec **Menu « Nouvel onglet »** coché, le menu affiche le profil à la place de l'action : la disposition n'y apparaît qu'une fois ;
+- menu décoché, le profil est masqué (`"hidden": true`) : il n'apparaît plus dans le menu mais reste utilisable avec `wt -p "<nom>"` ;
+- dans les deux cas, l'action reste dans la palette de commandes et garde son raccourci clavier.
+
+Le profil est mis à jour à chaque publication (nom, ligne de commande, icône) ; les réglages que vous lui ajoutez à la main dans Windows Terminal (couleurs, police…) sont conservés. Il est supprimé quand l'option est décochée ou que la disposition est retirée, sauf s'il est le profil par défaut : choisissez d'abord un autre profil par défaut. Les profils qui ouvrent une disposition ne sont pas proposés dans la liste des profils des volets.
+
+### Importer un profil
+
+Un profil dont la ligne de commande lance `wt.exe` (par exemple `wt.exe -w 0 nt -p … ; sp -V -s 0.4 … ; fp -t 0`, comme la commande générée recopiée dans un profil) peut être retransformé en disposition : **Importer** liste ces profils, et en choisir un crée une nouvelle disposition non publiée avec ses volets, titres, dossiers, tailles, couleur d'onglet et icône. Le profil lui-même n'est pas modifié ; une fois la disposition publiée (avec **Créer aussi un profil** si vous en avez besoin), vous pouvez supprimer le profil d'origine dans Windows Terminal. Les profils créés par l'outil ne sont pas listés.
 
 ### Langue et thème
 
