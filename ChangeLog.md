@@ -4,6 +4,8 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+## [0.3] - 2026-11-14
+
 ### Added
 
 - **PowerShell prompt** per pane: default, folder name only (`PS front> `), full path with the input on the next line, or a custom `prompt` function body. Useful when the starting directory is long. It is added to the pane command line (`pwsh.exe -NoExit -Command "function prompt { … }"`, or `-EncodedCommand` when the custom prompt contains `"`), replaces a prompt set by `$PROFILE`, and is read back when a layout is loaded or imported. Choosing a prompt for a pane without a command line fills it with the PowerShell of its profile; a command line that does not start an interactive `pwsh.exe` / `powershell.exe` keeps its own prompt, with a warning in the editor.
@@ -52,5 +54,6 @@ First public version.
 - Application icon, README in English and French.
 - Self-contained build for Windows x64 attached to the release.
 
+[0.3]: https://github.com/ddcdk/TerminalTabConfigurator/releases/tag/v0.3
 [0.2]: https://github.com/ddcdk/TerminalTabConfigurator/releases/tag/v0.2
 [0.1]: https://github.com/ddcdk/TerminalTabConfigurator/releases/tag/v0.1
