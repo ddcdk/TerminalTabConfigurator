@@ -14,6 +14,8 @@ public sealed class PaneLeaf : LayoutNode
     private string? _profile;
     private string? _commandline;
     private string? _startingDirectory;
+    private PromptStyle _prompt;
+    private string? _customPrompt;
     private bool _focusOnStart;
     private int _number;
     private bool _isSelected;
@@ -27,6 +29,12 @@ public sealed class PaneLeaf : LayoutNode
     public string? Commandline { get => _commandline; set => Set(ref _commandline, TextValue.Keep(value)); }
 
     public string? StartingDirectory { get => _startingDirectory; set => Set(ref _startingDirectory, TextValue.Keep(value)); }
+
+    /// <summary>PowerShell prompt; applied only when the command line starts PowerShell (see <see cref="Generation.PowerShellPrompt"/>).</summary>
+    public PromptStyle Prompt { get => _prompt; set => Set(ref _prompt, value); }
+
+    /// <summary>Body of the <c>prompt</c> function for <see cref="PromptStyle.Custom"/>.</summary>
+    public string? CustomPrompt { get => _customPrompt; set => Set(ref _customPrompt, TextValue.Keep(value)); }
 
     /// <summary>When true, this pane gets the focus once the tab is built. Only one pane can have it.</summary>
     public bool FocusOnStart
@@ -65,6 +73,8 @@ public sealed class PaneLeaf : LayoutNode
         _profile = _profile,
         _commandline = _commandline,
         _startingDirectory = _startingDirectory,
+        _prompt = _prompt,
+        _customPrompt = _customPrompt,
     };
 
     /// <summary>Trims the edited text fields (see <see cref="TextValue"/>).</summary>
@@ -73,5 +83,6 @@ public sealed class PaneLeaf : LayoutNode
         Title = TextValue.Clean(Title);
         Commandline = TextValue.Clean(Commandline);
         StartingDirectory = TextValue.Clean(StartingDirectory);
+        CustomPrompt = TextValue.Clean(CustomPrompt);
     }
 }

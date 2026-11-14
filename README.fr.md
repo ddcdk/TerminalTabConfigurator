@@ -14,7 +14,7 @@ Exemple : un onglet divisé verticalement, dont la moitié droite est elle-même
 
 - **Éditeur visuel** : division verticale ou horizontale d'un volet (barre d'outils, boutons du volet, clic droit), suppression, égalisation, redimensionnement à la souris (le pourcentage s'affiche sur chaque séparateur).
 - **Modèles de départ** : volet unique, 2 colonnes, 2 lignes, 1 + 2 à droite, 2 à gauche + 1, 1 en haut + 2 en bas, 3 colonnes, grille 2 × 2.
-- **Par volet** : titre, profil Windows Terminal, ligne de commande, dossier de démarrage, taille, volet qui a le focus à l'ouverture.
+- **Par volet** : titre, profil Windows Terminal, ligne de commande, dossier de démarrage, invite PowerShell, taille, volet qui a le focus à l'ouverture.
 - **Par onglet** : nom (affiché dans la palette et le menu), icône, titre de l'onglet, couleur de l'onglet.
 - **Publication dans `settings.json`**, avec un aperçu exact du JSON écrit, une sauvegarde horodatée et une détection des conflits de raccourcis clavier.
 - **Relecture et modification** des dispositions déjà publiées : elles sont relues depuis `settings.json` au démarrage.
@@ -78,6 +78,16 @@ Le bouton en forme d'engrenage, à droite de la barre d'outils, ouvre les préf�
 - **Thème** : thème du système, Sombre ou Clair.
 
 Les changements s'appliquent immédiatement et sont enregistrés dans `%APPDATA%\TerminalTabConfigurator\preferences.json`.
+
+### Invite PowerShell
+
+Avec un dossier de démarrage long, l'invite par défaut de PowerShell (`PS C:\Dev\clients\acme\webapp\front> `) laisse peu de place pour taper. La liste **Invite PowerShell** d'un volet la remplace :
+
+- **Nom du dossier seul** : `PS front> ` ;
+- **Chemin complet, saisie à la ligne** : le chemin sur une ligne, `> ` sur la suivante ;
+- **Personnalisée…** : le corps de votre propre fonction `prompt`, par exemple `"[$env:USERNAME] $(Split-Path -Leaf $PWD)> "`.
+
+L'invite est transmise à PowerShell par la ligne de commande du volet, qui devient par exemple `pwsh.exe -NoExit -Command "function prompt { 'PS ' + (Split-Path -Leaf $PWD.Path) + '> ' }"` (une invite personnalisée contenant `"` est transmise avec `-EncodedCommand`). Elle s'exécute après votre `$PROFILE` et remplace donc aussi l'invite qu'il définit (oh-my-posh, Starship…). Choisir une invite pour un volet sans ligne de commande la remplit avec le PowerShell de son profil (`pwsh.exe` pour le profil PowerShell). L'invite ne s'applique qu'à une ligne de commande qui lance `pwsh.exe` ou `powershell.exe` sans script ni `-Command` ; sinon elle est ignorée et l'éditeur le signale. Elle est relue au chargement et à l'import d'une disposition.
 
 ### Titres
 

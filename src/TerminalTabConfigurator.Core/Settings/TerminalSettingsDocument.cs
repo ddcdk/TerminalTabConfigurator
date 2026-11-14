@@ -14,8 +14,9 @@ using TerminalTabConfigurator.Core.Parsing;
 
 namespace TerminalTabConfigurator.Core.Settings;
 
+/// <param name="Source">Generator of a dynamic profile (<c>Windows.Terminal.PowershellCore</c>…), which then has no <c>commandline</c>.</param>
 /// <param name="Elevate">The profile runs as administrator (<c>"elevate": true</c>, possibly inherited from <c>profiles.defaults</c>).</param>
-public sealed record TerminalProfile(string Name, string? Guid, string? Commandline, bool Hidden, bool Elevate = false, string? Icon = null)
+public sealed record TerminalProfile(string Name, string? Guid, string? Commandline, bool Hidden, bool Elevate = false, string? Icon = null, string? Source = null)
 {
     /// <summary>The profile only starts <c>wt.exe</c>: it opens a layout that can be imported (see <see cref="WtCommandLineParser"/>).</summary>
     public bool IsLayout => WtCommandLineParser.IsWtCommand(Commandline);
@@ -95,7 +96,8 @@ public sealed partial class TerminalSettingsDocument
                        Str(p, "commandline"),
                        Bool(p, "hidden") == true,
                        Bool(p, "elevate") ?? defaultElevate,
-                       Str(p, "icon")))
+                       Str(p, "icon"),
+                       Str(p, "source")))
                    .ToList()
                ?? [];
     }

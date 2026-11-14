@@ -59,7 +59,7 @@ public static class WtCommandLineBuilder
         if (pane.Profile is not null) sb.Append(" -p ").Append(Quote(pane.Profile));
         if (title is not null) sb.Append(" --title ").Append(Quote(EscapeSemicolons(title)));
         if (TextValue.Clean(pane.StartingDirectory) is { } directory) sb.Append(" -d ").Append(Quote(directory));
-        if (TextValue.Clean(pane.Commandline) is { } commandline) sb.Append(' ').Append(EscapeSemicolons(commandline));
+        if (PowerShellPrompt.Commandline(pane) is { } commandline) sb.Append(' ').Append(EscapeSemicolons(commandline));
     }
 
     /// <summary>wt.exe uses <c>;</c> to separate commands; a literal one must be written <c>\;</c>.</summary>

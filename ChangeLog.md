@@ -4,6 +4,10 @@ All notable changes to this project are listed here. The format follows [Keep a 
 
 ## [Unreleased]
 
+### Added
+
+- **PowerShell prompt** per pane: default, folder name only (`PS front> `), full path with the input on the next line, or a custom `prompt` function body. Useful when the starting directory is long. It is added to the pane command line (`pwsh.exe -NoExit -Command "function prompt { … }"`, or `-EncodedCommand` when the custom prompt contains `"`), replaces a prompt set by `$PROFILE`, and is read back when a layout is loaded or imported. Choosing a prompt for a pane without a command line fills it with the PowerShell of its profile; a command line that does not start an interactive `pwsh.exe` / `powershell.exe` keeps its own prompt, with a warning in the editor.
+
 ## [0.2] - 2026-11-12
 
 ### Added

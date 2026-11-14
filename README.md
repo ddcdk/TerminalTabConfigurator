@@ -14,7 +14,7 @@ Example: a tab split vertically, with its right half split horizontally, each pa
 
 - **Visual editor**: split a pane vertically or horizontally (toolbar, pane buttons, right-click), delete, equalize, resize with the mouse (the percentage is shown on each splitter).
 - **Starting templates**: single pane, 2 columns, 2 rows, 1 + 2 on the right, 2 on the left + 1, 1 on top + 2 below, 3 columns, 2 × 2 grid.
-- **Per pane**: title, Windows Terminal profile, command line, starting directory, size, which pane has focus when the tab opens.
+- **Per pane**: title, Windows Terminal profile, command line, starting directory, PowerShell prompt, size, which pane has focus when the tab opens.
 - **Per tab**: name (shown in the palette and the menu), icon, tab title, tab color.
 - **Publishing to `settings.json`**, with an exact preview of the JSON written, a timestamped backup, and detection of keyboard shortcut conflicts.
 - **Reading back and editing** layouts already published: they are loaded from `settings.json` at startup.
@@ -78,6 +78,16 @@ The gear button at the right of the toolbar opens the preferences:
 - **Theme**: system theme, Dark or Light.
 
 Changes apply immediately and are saved in `%APPDATA%\TerminalTabConfigurator\preferences.json`.
+
+### PowerShell prompt
+
+With a long starting directory, PowerShell's default prompt (`PS C:\Dev\clients\acme\webapp\front> `) leaves little room to type. The **PowerShell prompt** list of a pane replaces it:
+
+- **Folder name only**: `PS front> `;
+- **Full path, input on the next line**: the path on one line, `> ` on the next;
+- **Custom…**: the body of your own `prompt` function, for example `"[$env:USERNAME] $(Split-Path -Leaf $PWD)> "`.
+
+The prompt is passed to PowerShell on the pane command line, which becomes for example `pwsh.exe -NoExit -Command "function prompt { 'PS ' + (Split-Path -Leaf $PWD.Path) + '> ' }"` (a custom prompt containing `"` is sent with `-EncodedCommand`). It runs after your `$PROFILE`, so it also replaces a prompt set there (oh-my-posh, Starship…). Choosing a prompt for a pane without a command line fills it with the PowerShell of its profile (`pwsh.exe` for the PowerShell profile). The prompt only applies to a command line that starts `pwsh.exe` or `powershell.exe` without a script or `-Command`; otherwise it is ignored and the editor says so. It is read back when the layout is loaded or imported.
 
 ### Titles
 

@@ -362,6 +362,21 @@
                                      AutomationProperties.Name="{l:Tr StartingDirectory}" />
                         </DockPanel>
 
+                        <TextBlock Text="{l:Tr PowerShellPrompt}" Style="{StaticResource FieldLabel}" />
+                        <ComboBox ItemsSource="{Binding PromptOptions}" DisplayMemberPath="Display" SelectedValuePath="Style"
+                                  SelectedValue="{Binding SelectedPanePrompt}" IsEnabled="{Binding CanEditPrompt}"
+                                  AutomationProperties.Name="{l:Tr PowerShellPrompt}" HorizontalAlignment="Stretch" />
+                        <TextBox Text="{Binding SelectedPane.CustomPrompt, UpdateSourceTrigger=PropertyChanged}" Margin="0,6,0,0"
+                                 FontFamily="{StaticResource MonoFont}" FontSize="12"
+                                 Visibility="{Binding IsCustomPrompt, Converter={StaticResource BoolToVisibility}}"
+                                 AutomationProperties.Name="{l:Tr PromptCustomLabel}" />
+                        <TextBlock Style="{StaticResource Hint}" Text="{l:Tr PromptCustomHint}"
+                                   Visibility="{Binding IsCustomPrompt, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Style="{StaticResource Hint}" Text="{l:Tr PromptHint}"
+                                   Visibility="{Binding IsCustomPrompt, Converter={StaticResource InverseVisibility}}" />
+                        <TextBlock Style="{StaticResource Hint}" Foreground="{DynamicResource WarningIconBrush}" Text="{Binding PromptWarning}"
+                                   Visibility="{Binding PromptWarning, Converter={StaticResource NotNullToVisibility}, FallbackValue=Collapsed}" />
+
                         <DockPanel Margin="0,12,0,6">
                             <TextBlock DockPanel.Dock="Right" FontSize="12">
                                 <Run Text="{Binding SelectedPaneShare, Mode=OneWay, StringFormat={}{0:0}}" /><Run Text=" %" />

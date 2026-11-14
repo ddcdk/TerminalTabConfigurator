@@ -110,7 +110,57 @@ public sealed class MainViewModel : ObservableObject
             Raise(nameof(SelectedPaneShare));
             Raise(nameof(SelectedPaneIsElevated));
             Raise(nameof(CanResizeSelectedPane));
+            RaisePrompt();
         }
+    }
+
+    public IReadOnlyList<PromptOption> PromptOptions { get; } =
+    [
+        new(PromptStyle.Default, "PromptDefault"),
+        new(PromptStyle.FolderName, "PromptFolderName"),
+        new(PromptStyle.TwoLines, "PromptTwoLines"),
+        new(PromptStyle.Custom, "PromptCustom"),
+    ];
+
+    /// <summary>
+    /// PowerShell prompt of the selected pane. Choosing one for a pane without a command line fills it
+    /// with the PowerShell of its profile: the prompt is passed to that command line.
+    /// </summary>
+    public PromptStyle SelectedPanePrompt
+    {
+        get => _selectedPane?.Prompt ?? PromptStyle.Default;
+        set
+        {
+            if (_selectedPane is not { } pane || pane.Prompt == value) return;
+            if (value != PromptStyle.Default && TextValue.Clean(pane.Commandline) is null && ProfileShell(pane) is { } shell)
+                pane.Commandline = shell;
+            pane.Prompt = value;
+            RaisePrompt();
+        }
+    }
+
+    /// <summary>The prompt list is usable: the pane runs PowerShell, or a prompt must be cleared.</summary>
+    public bool CanEditPrompt =>
+        _selectedPane is { } pane &&
+        (pane.Prompt != PromptStyle.Default || PowerShellPrompt.CanApply(TextValue.Clean(pane.Commandline) ?? ProfileShell(pane)));
+
+    public bool IsCustomPrompt => _selectedPane?.Prompt == PromptStyle.Custom;
+
+    /// <summary>Why the chosen prompt will not be applied, or null.</summary>
+    public string? PromptWarning =>
+        _selectedPane is { Prompt: not PromptStyle.Default } pane && !PowerShellPrompt.CanApply(TextValue.Clean(pane.Commandline))
+            ? Loc.T(TextValue.Clean(pane.Commandline) is null ? "PromptNeedsCommandline" : "PromptNotApplied")
+            : null;
+
+    private string? ProfileShell(PaneLeaf pane) =>
+        PowerShellPrompt.ProfileCommandline(ProfileCatalog.Profiles.FirstOrDefault(p => p.Matches(pane.Profile ?? _defaultProfile)));
+
+    private void RaisePrompt()
+    {
+        Raise(nameof(SelectedPanePrompt));
+        Raise(nameof(CanEditPrompt));
+        Raise(nameof(IsCustomPrompt));
+        Raise(nameof(PromptWarning));
     }
 
     public bool CanResizeSelectedPane => _selectedPane?.Parent is not null;
@@ -182,6 +232,8 @@ public sealed class MainViewModel : ObservableObject
     {
         foreach (var entry in Layouts) entry.RefreshTexts();
         foreach (var profile in Profiles) profile.RefreshDisplay();
+        foreach (var option in PromptOptions) option.RefreshDisplay();
+        Raise(nameof(PromptWarning));
         Raise(nameof(ElevationWarning));
         if (_status is not null) StatusMessage = _status();
     }
@@ -251,6 +303,7 @@ public sealed class MainViewModel : ObservableObject
         Raise(nameof(SelectedPaneIsElevated));
         Raise(nameof(SelectedPaneShare));
         Raise(nameof(CanResizeSelectedPane));
+        RaisePrompt();
     }
 
     private void RefreshPreview()

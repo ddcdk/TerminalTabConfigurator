@@ -6,6 +6,7 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using TerminalTabConfigurator.Core.Generation;
 using TerminalTabConfigurator.Core.Model;
 
 namespace TerminalTabConfigurator.Core.Parsing;
@@ -105,12 +106,15 @@ public static class LayoutParser
 
     private static PaneLeaf ReadPane(JsonObject action, HashSet<string> knownKeys, string? title)
     {
+        var (commandline, prompt, customPrompt) = PowerShellPrompt.Extract(Str(action, "commandline"));
         var pane = new PaneLeaf
         {
             Title = title,
             Profile = Str(action, "profile"),
-            Commandline = Str(action, "commandline"),
+            Commandline = commandline,
             StartingDirectory = Str(action, "startingDirectory"),
+            Prompt = prompt,
+            CustomPrompt = customPrompt,
         };
 
         foreach (var (key, value) in action)

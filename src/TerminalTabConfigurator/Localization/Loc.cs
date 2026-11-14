@@ -166,6 +166,30 @@ public sealed class Loc : INotifyPropertyChanged
                                "Empty = the profile's command. E.g. pwsh.exe -NoExit -Command \"npm run dev\""),
         ["StartingDirectory"] = ("Dossier de démarrage", "Starting directory"),
         ["BrowseFolders"] = ("Parcourir les dossiers", "Browse folders"),
+
+        ["PowerShellPrompt"] = ("Invite PowerShell", "PowerShell prompt"),
+
+        ["PromptDefault"] = ("Par défaut (inchangée)", "Default (unchanged)"),
+
+        ["PromptFolderName"] = ("Nom du dossier seul  —  PS front>", "Folder name only  —  PS front>"),
+
+        ["PromptTwoLines"] = ("Chemin complet, saisie à la ligne", "Full path, input on the next line"),
+
+        ["PromptCustom"] = ("Personnalisée…", "Custom…"),
+
+        ["PromptCustomLabel"] = ("Corps de la fonction prompt", "Body of the prompt function"),
+
+        ["PromptHint"] = ("Raccourcit l'invite quand le dossier de démarrage est long. Remplace l'invite du profil PowerShell ($PROFILE, oh-my-posh…).",
+                          "Shortens the prompt when the starting directory is long. Replaces the prompt set by the PowerShell profile ($PROFILE, oh-my-posh…)."),
+
+        ["PromptCustomHint"] = ("Expression PowerShell qui renvoie le texte de l'invite. Ex. : \"$(Split-Path -Leaf $PWD)> \"",
+                                "PowerShell expression that returns the prompt text. E.g. \"$(Split-Path -Leaf $PWD)> \""),
+
+        ["PromptNeedsCommandline"] = ("Ignorée : l'invite est transmise par la ligne de commande, qui est vide. Indiquez pwsh.exe ou powershell.exe.",
+                                      "Ignored: the prompt is passed on the command line, which is empty. Enter pwsh.exe or powershell.exe."),
+
+        ["PromptNotApplied"] = ("Ignorée : la ligne de commande doit lancer pwsh.exe ou powershell.exe, sans script ni -Command.",
+                                "Ignored: the command line must start pwsh.exe or powershell.exe, without a script or -Command."),
         ["SizeInSplit"] = ("Taille dans sa division", "Size within its split"),
         ["FocusOnStart"] = ("Focus sur ce volet à l'ouverture", "Focus this pane when the tab opens"),
         ["TabSection"] = ("ONGLET", "TAB"),

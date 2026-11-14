@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 // See the LICENSE file at the root of the project.
 
+using TerminalTabConfigurator.Core.Model;
 using TerminalTabConfigurator.Core.Settings;
 using TerminalTabConfigurator.Core.Templates;
 using TerminalTabConfigurator.Localization;
@@ -17,6 +18,15 @@ public sealed class ProfileOption(string? label, string reference, bool hidden =
         label is null ? Loc.T("DefaultProfile") : hidden ? $"{label} ({Loc.T("Hidden")})" : label;
 
     public string Reference { get; } = reference;
+
+    public void RefreshDisplay() => Raise(nameof(Display));
+}
+
+public sealed class PromptOption(PromptStyle style, string textKey) : ObservableObject
+{
+    public PromptStyle Style { get; } = style;
+
+    public string Display => Loc.T(textKey);
 
     public void RefreshDisplay() => Raise(nameof(Display));
 }

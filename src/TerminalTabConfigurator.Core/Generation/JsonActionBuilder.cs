@@ -58,7 +58,7 @@ public static class JsonActionBuilder
     private static void AddPaneArgs(JsonObject target, PaneLeaf pane)
     {
         if (pane.Profile is not null) target["profile"] = pane.Profile;
-        if (TextValue.Clean(pane.Commandline) is { } commandline) target["commandline"] = commandline;
+        if (PowerShellPrompt.Commandline(pane) is { } commandline) target["commandline"] = commandline;
         if (TextValue.Clean(pane.StartingDirectory) is { } directory) target["startingDirectory"] = directory;
         if (TextValue.Clean(pane.Title) is { } title) target["tabTitle"] = title;
 
